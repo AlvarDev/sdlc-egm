@@ -235,6 +235,14 @@ Reconcile the drift between docs/designs/retropulse.md and the codebase:
 3. Re-run /egm:egm-drift-report docs/designs/ to verify that zero drift remains.
 ```
 
+> [!TIP]
+> **How to Add Features in Production *Without* Causing Drift**  
+> In this step, we intentionally broke the rule ("code first, spec later") to see `/egm:egm-drift-report` catch it. In real daily work, flip the order so drift never happens:
+> 1. **(Legacy repos only)** Run `/egm:egm-bootstrap` once to map undocumented folders into `README.md` contracts.
+> 2. **Spec first:** Update `docs/designs/retropulse.md` (or draft a new spec with `/egm:egm-draft`) *before* writing code.
+> 3. **Review with code context:** Run `/egm:egm-review` and pass your existing source files (`main.py`, `static/index.html`) as `GoldfishContext`.
+> 4. **Implement & verify:** Generate the code from the updated spec and run `/egm:egm-drift-report` as a verification gate.
+
 ---
 
 ## Step 7 (Optional Bonus): Deploy to Cloud Run (5 min)

@@ -329,6 +329,17 @@ Please record these decisions in `concepts_brief.md` and finalize the brief.</co
 2. Update docs/designs/retropulse.md to officially document the optional "author" field (default "Anonymous") and the DELETE /api/cards "Clear Board" feature.
 3. Re-run /egm:egm-drift-report docs/designs/ to verify that zero drift remains.</code></pre>
       <p>Inspect <code>{YYYY-MM-DD}_DRIFT_REPORT.md</code>&mdash;your specification and codebase are once again 100% synchronized (<code>No drift detected.</code>)!</p>
+
+      <aside class="special">
+        <p><strong>How to Add Features in Production <em>Without</em> Causing Drift</strong><br>
+        In this step, we intentionally broke the rule (&ldquo;code first, spec later&rdquo;) to see <code>/egm:egm-drift-report</code> catch it. In real daily work, flip the order so drift never happens:</p>
+        <ol>
+          <li><strong>(Legacy repos only)</strong> Run <code>/egm:egm-bootstrap</code> once to map undocumented folders into <code>README.md</code> contracts.</li>
+          <li><strong>Spec first:</strong> Update <code>docs/designs/retropulse.md</code> (or draft a new spec with <code>/egm:egm-draft</code>) <em>before</em> writing code.</li>
+          <li><strong>Review with code context:</strong> Run <code>/egm:egm-review</code> and pass your existing source files (<code>main.py</code>, <code>static/index.html</code>) as <code>GoldfishContext</code>.</li>
+          <li><strong>Implement &amp; verify:</strong> Generate the code from the updated spec and run <code>/egm:egm-drift-report</code> as a verification gate.</li>
+        </ol>
+      </aside>
     </google-codelab-step>
 
     <google-codelab-step label="Step 7: (Optional Bonus) Containerize &amp; Deploy to Cloud Run" duration="5">
