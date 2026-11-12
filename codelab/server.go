@@ -13,8 +13,13 @@ func main() {
 		port = "8080"
 	}
 
+	docsDir := "./docs"
+	if _, err := os.Stat(docsDir); os.IsNotExist(err) {
+		docsDir = "../docs"
+	}
+
 	mux := http.NewServeMux()
-	fs := http.FileServer(http.Dir("./docs"))
+	fs := http.FileServer(http.Dir(docsDir))
 	mux.Handle("/", fs)
 
 	srv := &http.Server{
