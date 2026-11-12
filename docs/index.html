@@ -15,6 +15,61 @@
     .error {
       color: red;
     }
+    .code-block-wrapper {
+      position: relative;
+      margin: 14px 0;
+    }
+    google-codelab-step .code-block-wrapper pre {
+      margin: 0;
+      padding: 14px 76px 14px 14px;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+    .code-block-actions {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      display: flex;
+      gap: 2px;
+      z-index: 2;
+    }
+    .code-action-btn {
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: #bdc1c6;
+      cursor: pointer;
+      padding: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.15s, color 0.15s;
+    }
+    .code-action-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+    }
+    .code-action-btn .material-icons {
+      font-size: 18px;
+    }
+    .code-action-btn.copied {
+      color: #81c995;
+    }
+    body.code-light google-codelab-step pre {
+      background-color: #f1f3f4;
+      color: #202124;
+      border: 1px solid #dadce0;
+    }
+    body.code-light .code-action-btn {
+      color: #5f6368;
+    }
+    body.code-light .code-action-btn:hover {
+      background: rgba(32, 33, 36, 0.08);
+      color: #202124;
+    }
+    body.code-light .code-action-btn.copied {
+      color: #1e8e3e;
+    }
   </style>
 </head>
 <body>
@@ -23,7 +78,13 @@
                   environment="web">
 
     <google-codelab-step label="Overview" duration="5">
+      <google-codelab-about codelab-title="Spec-Driven Development with Antigravity &amp; the Elephant-Goldfish Model (EGM)"
+                            last-updated="2026-11-12T12:00:00Z"
+                            authors="AlvarDev">
+      </google-codelab-about>
+
       <p>Welcome to the hands-on workshop on <strong>Spec-Driven Development (SDD)</strong> with <strong>Google Antigravity</strong> and the <strong>Elephant-Goldfish Model (EGM)</strong>.</p>
+      <p class="image-container"><img alt="Elephant-Goldfish Model (EGM)" src="img/og-egm.png"></p>
       <p>Instead of unstructured &ldquo;vibe coding&rdquo; (prompting an AI to write code directly and hoping for the best), Spec-Driven Development treats your <strong>technical specification</strong> as the single source of truth. In this workshop, you will take SDD a step further using the open-source <a href="https://github.com/google/elephant-goldfish-model" target="_blank">Elephant-Goldfish Model (EGM) plugin</a>:</p>
       <ul>
         <li><strong>The Elephant (Long-Horizon Context)</strong>: Collaborates with you to brainstorm requirements, weigh architectural trade-offs, and draft a formal specification (<code>docs/designs/retropulse.md</code>)&mdash;without writing production code.</li>
@@ -56,25 +117,26 @@
       </ul>
     </google-codelab-step>
 
-    <google-codelab-step label="Step 1: Set Up Your Workspace &amp; Install EGM" duration="5">
+    <google-codelab-step label="Step 1: Install EGM &amp; Set Up Your Workspace" duration="5">
       <p>You will start completely from scratch in an empty folder&mdash;no starter repository, no pre-written code, and no manual terminal setup required.</p>
 
-      <h2>1. Create and Open an Empty Folder</h2>
-      <ol>
-        <li>Create a new empty folder on your computer named <code>retropulse</code>.</li>
-        <li>Open the <strong>Antigravity App</strong> and select <strong>File &gt; Open Folder...</strong> to open <code>retropulse</code>.</li>
-      </ol>
-
-      <h2>2. Install the EGM Plugin</h2>
-      <p>In the Antigravity App agent chat panel, install the open-source Elephant-Goldfish Model plugin by copying and pasting the following prompt (or using <code>/plugin</code>):</p>
-      <pre><code>Install https://github.com/google/elephant-goldfish-model</code></pre>
+      <h2>1. Install the EGM Plugin</h2>
+      <p>Open the <strong>Antigravity App</strong>, click <strong>Customizations</strong> in the left sidebar, search for <code>egm</code>, select <strong>Elephant-Goldfish Model</strong>, and click <strong>Install</strong>.</p>
+      <p class="image-container"><img alt="Install Elephant-Goldfish Model in Customizations" src="img/step1-install-egm.png"></p>
 
       <aside class="special">
         <p><strong>Tip:</strong> If you also have the Antigravity CLI (<code>agy</code>) installed, you can install the plugin from any terminal with:<br>
         <code>agy plugin install https://github.com/google/elephant-goldfish-model</code></p>
       </aside>
 
-      <p>Once installed, start a fresh session or reload the window so the <code>/egm:*</code> skills (<code>egm-brainstorm</code>, <code>egm-draft</code>, <code>egm-review</code>, <code>egm-resolve</code>, and <code>egm-drift-report</code>) and Goldfish reviewer subagents are active.</p>
+      <h2>2. Create and Open an Empty Folder</h2>
+      <ol>
+        <li>Create a new empty folder on your computer named <code>retropulse</code>.</li>
+        <li>In the <strong>Antigravity App</strong>, click <strong>Create Project</strong>, add the <code>retropulse</code> folder you created (<strong>+ Add Folder</strong>), and click <strong>Next</strong>.</li>
+      </ol>
+      <p class="image-container"><img alt="Create Project in Antigravity App" src="img/step1-create-project.png"></p>
+
+      <p>Your new project session now has the <code>/egm:*</code> skills (<code>egm-brainstorm</code>, <code>egm-draft</code>, <code>egm-review</code>, <code>egm-resolve</code>, and <code>egm-drift-report</code>) and Goldfish reviewer subagents ready to use.</p>
     </google-codelab-step>
 
     <google-codelab-step label="Step 2: Brainstorm with the Elephant (/egm:egm-brainstorm)" duration="10">
@@ -89,19 +151,18 @@
       <p>The Elephant will interview you in chat about your problem statement, users, constraints, non-goals, success metrics, and author name.</p>
 
       <aside class="special">
-        <p><strong>Where is your tech stack recorded?</strong><br>
-        When you answer the Elephant&#39;s questions in chat, your choices are <strong>not</strong> left in chat history. At the end of this step, the Elephant writes your answers directly into a file on disk called <code>concepts_brief.md</code> under <code>## Key Decisions &amp; Staging for Next Steps</code> and <code>## Alternatives Weighed</code>.</p>
+        <p><strong>Using your own Global Rules or Skills?</strong><br>
+        If you already have personal <a href="https://antigravity.google/docs/rules#global-rules" target="_blank">Global Rules</a> (such as <code>~/.gemini/GEMINI.md</code>, <code>AGENTS.md</code>, or <strong>Customizations &gt; Rules</strong>) or custom skills configured in Antigravity, the Elephant&#39;s questions may include extra items tailored to your rules (for example, authentication or cloud defaults). You can either address those extra rules alongside <strong>Prompt 2</strong>, or temporarily disable your global rules if you want a clean sandbox for this workshop.</p>
       </aside>
 
       <p>Copy and paste <strong>Prompt 2</strong> to answer all of the Elephant&#39;s clarifying questions and declare your architecture in one turn:</p>
       <pre><code>Here are our answers and architectural constraints:
 - Author: Workshop Attendee
-- Problem &amp; Users: A single engineering team (up to 20 people) needs a fast, zero-setup board during live sprint retrospectives without logging into heavy project management tools.
-- Tech Stack Choice: Python managed with `uv`, using `fastapi` and `uvicorn` (chosen over Golang or Node.js for rapid Pydantic schema validation), serving a single-page frontend in `static/index.html` built with vanilla HTML, CSS, and JavaScript.
-- Storage Constraint: Strictly in-memory Python list/dict in `main.py` (no SQLite, Postgres, or external databases; resetting on server restart is expected).
-- Functional Rules: Each card has `id`, `text` (non-empty, max 280 characters), `category` ("Went Well", "To Improve", or "Action Items"), and `votes` (integer starting at 0, incrementing by +1 per upvote).
-- Out of Scope (Non-Goals for v1): No user authentication, no card deletion, no card editing, no author field on cards.
-- Success Metric: Users can open `http://localhost:8000`, create cards in any of the 3 columns, and upvote cards with sub-100ms response time.</code></pre>
+- Problem &amp; Existing Alternatives: Today our single engineering team (up to 20 people) uses ad-hoc shared docs because SaaS tools (EasyRetro, Miro) require external accounts and store sprint feedback off-machine. We need a zero-login, strictly local ephemeral board with zero external data residency.
+- Usage &amp; Concurrency Model: A single shared board accessed by teammates over HTTP (`http://localhost:8000` or a shared local URL) backed by server memory—using standard synchronous REST `fetch` requests on load and user actions (no WebSockets or Server-Sent Events needed for v1).
+- Voting &amp; Card Lifecycle: Each card has `id`, `text` (non-empty, max 280 characters), `category` ("Went Well", "To Improve", or "Action Items"), and `votes` (starting at 0, unlimited anonymous `+1` clicks with no per-user vote cap or session tracking). Cards are immutable once posted—no editing, deleting, or converting/moving cards between columns.
+- Tech Stack &amp; Persistence: Python managed with `uv`, using `fastapi` and `uvicorn` (chosen over Golang or Node.js for rapid Pydantic schema validation), serving a single-page frontend in `static/index.html` built with vanilla HTML, CSS, and JavaScript. Storage is strictly an in-memory Python list/dict in `main.py` (no SQLite, Postgres, or external databases; resetting on server restart is desired).
+- Out of Scope &amp; Success Metric: No user authentication, no author attribution on cards, and no multiple boards/rooms. Users can open `http://localhost:8000`, post cards in any of the 3 columns, and upvote cards with sub-100ms response time.</code></pre>
 
       <h2>3. Trigger the Goldfish Brainstorm Swarm</h2>
       <p>After reading your constraints, the Elephant summarizes the anchored hypothesis and presents a single-select confirmation gate in chat:</p>
@@ -112,46 +173,49 @@
       </ol>
 
       <h2>4. Finalize the Brief and Hand Off to Drafting</h2>
-      <p>The Elephant will highlight 2&ndash;3 edge cases raised by the Goldfish reviewers (such as handling invalid category names, concurrent upvote requests, or whitespace-only card text).</p>
+      <p>The Elephant will highlight 2&ndash;3 edge cases raised by the Goldfish reviewers (such as stale board visibility without push transport, single-worker process &amp; ID collisions, or jumping cards during rapid voting).</p>
       <p>Copy and paste <strong>Prompt 3</strong> to align on those edge cases and finalize the brief:</p>
-      <pre><code>Keep the scope strictly minimal for v1: enforce category validation ("Went Well", "To Improve", "Action Items") and strip whitespace in the FastAPI Pydantic model so empty strings are rejected with HTTP 422. I am aligned with `concepts_brief.md`—let's finalize the brief.</code></pre>
-      <p>When the handoff menu appears, select:</p>
-      <ul>
-        <li><strong><code>Proceed to egm-draft (Initialize formal design document)</code></strong></li>
-      </ul>
+      <pre><code>Keep the scope strictly minimal for v1 with these decisions:
+- API Routes &amp; Board Sync: Lock in `GET /` (serves `static/index.html`), `GET /api/cards`, `POST /api/cards`, and `POST /api/cards/{card_id}/upvote`. Fetch `GET /api/cards` on page load, card creation, and upvote, relying on standard browser refresh for passive readers (no background polling timers).
+- Process &amp; ID Model: Run Uvicorn strictly as a single worker process (`--workers 1`) and use sequential integer IDs (`1, 2, 3...`), accepting stale browser tabs if the ephemeral server restarts.
+- Ordering, Validation &amp; Memory: Render cards in stable creation order (no dynamic re-sorting on `+1` clicks so cards never jump beneath the cursor), enforce category validation ("Went Well", "To Improve", "Action Items") and whitespace-stripped 1..280 character validation in Pydantic (rejecting empty/whitespace strings with HTTP 422), and skip hard card-count caps for a trusted 20-person team.
+
+Please record these decisions in `concepts_brief.md` and finalize the brief.</code></pre>
+      <p>When the handoff options appear, click <strong><code>Proceed to egm-draft (Initialize formal design document)</code></strong> if shown as a button, or proceed directly to <strong>Step 3</strong> and run <code>/egm:egm-draft</code>.</p>
     </google-codelab-step>
 
     <google-codelab-step label="Step 3: Draft the Specification (/egm:egm-draft)" duration="10">
       <p>Now that <code>concepts_brief.md</code> is saved on disk, you will use <code>/egm:egm-draft</code> to turn the brief into a formal engineering specification (<code>docs/designs/retropulse.md</code>).</p>
 
       <h2>1. Start the Drafting Workflow</h2>
-      <p>Copy and paste <strong>Prompt 4</strong> into the Antigravity chat:</p>
+      <p>If you did not already launch <code>egm-draft</code> from a handoff button at the end of Step 2, copy and paste <strong>Prompt 4</strong> into the Antigravity chat:</p>
       <pre><code>/egm:egm-draft</code></pre>
       <p>The Elephant automatically detects and reads <code>concepts_brief.md</code> from disk and asks for confirmation to start drafting. If prompted in chat to confirm, reply:</p>
       <pre><code>Yes, proceed with drafting from concepts_brief.md.</code></pre>
 
       <h2>2. Review and Approve the 4 Specification Sections</h2>
-      <p>Instead of dumping a massive document into chat, <code>/egm:egm-draft</code> writes <strong><code>design_draft.md</code></strong> section by section, pausing after each section with a 2-option approval button so you remain in control:</p>
+      <p>Instead of dumping a massive document into chat, <code>/egm:egm-draft</code> writes <strong><code>design_draft.md</code></strong> section by section, pausing after each checkpoint so you remain in control.</p>
+      <p>At each checkpoint, click <strong><code>Review</code></strong> (or <strong><code>design_draft.md</code></strong>) to inspect what was written to disk, then select option <strong><code>1. Approve [Section] and proceed to next section</code></strong> and click <strong><code>Submit</code></strong>:</p>
       <ol>
         <li><strong>Checkpoint 1 &mdash; <code>Overview &amp; Goals</code></strong>:<br>
-        Writes <code>## Overview</code>, <code>## The Problem</code>, <code>## Goals</code>, <code>## Non-Goals</code>, and <code>## Critical User Journeys (CUJs)</code>. Open <code>design_draft.md</code> in the side panel, verify that card deletion and card authors are listed under <code>Non-Goals</code>, and click:<br>
-        <strong><code>Approve Overview &amp; Goals and proceed to next section</code></strong></li>
+        Writes <code>## Overview</code>, <code>## The Problem</code>, <code>## Goals</code>, <code>## Non-Goals</code>, and <code>## Critical User Journeys (CUJs)</code> (verify card deletion and card authors are listed under <code>Non-Goals</code>).</li>
         <li><strong>Checkpoint 2 &mdash; <code>Technical Plan</code></strong>:<br>
-        Appends <code>## Technical Plan (Architecture)</code>, documenting the FastAPI endpoints (<code>GET /api/cards</code>, <code>POST /api/cards</code>, <code>POST /api/cards/{id}/upvote</code>), the Pydantic model (<code>max_length=280</code>), in-memory storage, and <code>static/index.html</code>. Review the architecture and click:<br>
-        <strong><code>Approve Technical Plan and proceed to next section</code></strong></li>
+        Appends <code>## Technical Plan (Architecture)</code>, documenting the FastAPI endpoints (<code>GET /api/cards</code>, <code>POST /api/cards</code>, <code>POST /api/cards/{card_id}/upvote</code>), the Pydantic model (<code>max_length=280</code>), in-memory storage, and <code>static/index.html</code>.</li>
         <li><strong>Checkpoint 3 &mdash; <code>Alternatives Considered</code></strong>:<br>
-        Appends <code>## Alternatives Considered</code>, permanently documenting why <strong>Golang / Node.js</strong> and <strong>SQLite / external databases</strong> were rejected in favor of Python (<code>uv</code> + FastAPI) and in-memory state. Review and click:<br>
-        <strong><code>Approve Alternatives Considered and proceed to next section</code></strong></li>
+        Appends <code>## Alternatives Considered</code>, permanently documenting why <strong>Golang / Node.js</strong> and <strong>SQLite / external databases</strong> were rejected in favor of Python (<code>uv</code> + FastAPI) and in-memory state.</li>
         <li><strong>Checkpoint 4 &mdash; <code>Detailed Implementation</code></strong>:<br>
-        Appends <code>## Detailed Implementation Plan</code>, listing <strong>every exact file to create</strong> (<code>pyproject.toml</code>, <code>main.py</code>, <code>static/index.html</code>) along with the <code>### Verification Plan</code> (<code>uv</code> commands). Notice that <strong>no production code is written yet</strong>&mdash;only the blueprint. Click:<br>
-        <strong><code>Approve Detailed Implementation and proceed to next section</code></strong></li>
+        Appends <code>## Detailed Implementation Plan</code>, listing <strong>every exact file to create</strong> (<code>pyproject.toml</code>, <code>main.py</code>, <code>static/index.html</code>) along with the <code>### Verification Plan</code> (<code>uv</code> commands)—still with <strong>no production code</strong> written yet.</li>
       </ol>
 
+      <aside class="special">
+        <p><strong>No approval buttons shown?</strong><br>
+        If the agent finishes a section without displaying the clickable approval options, simply copy and paste this prompt into chat:</p>
+        <pre><code>Approve this section and proceed to the next section.</code></pre>
+      </aside>
+
       <h2>3. Save the Specification to <code>docs/designs/</code></h2>
-      <p>After the fourth checkpoint, the Elephant reconciles <code>design_draft.md</code> against <code>concepts_brief.md</code> and asks where to save the finalized specification. Select:</p>
-      <ul>
-        <li><strong><code>Save to detected directory: docs/designs/</code></strong></li>
-      </ul>
+      <p>After the fourth checkpoint, the Elephant reconciles <code>design_draft.md</code> against <code>concepts_brief.md</code> and asks where to save the finalized specification. Select <strong><code>Save to detected directory: docs/designs/</code></strong> if shown as a button, or reply in chat:</p>
+      <pre><code>Save the finalized specification to docs/designs/retropulse.md.</code></pre>
       <p>Your specification is now saved on disk at <code>docs/designs/retropulse.md</code>.</p>
     </google-codelab-step>
 
@@ -187,10 +251,12 @@
 
       <h2>4. Resolve Findings and Finalize the Spec</h2>
       <p>When the Goldfish review completes, it writes <code>implementation_readiness_report.md</code> and presents a checkpoint menu:</p>
-      <ul>
-        <li>If the report found any missing details you want fixed, select <strong><code>Resolve findings with agent (evaluate findings, propose fixes, and apply approved edits)</code></strong> (which runs <code>/egm:egm-resolve</code>) and approve the proposed fixes.</li>
-        <li>Otherwise, select <strong><code>Conclude review and finalize document</code></strong>.</li>
-      </ul>
+      <ol>
+        <li>Select <strong><code>2. Resolve findings with agent (evaluate findings, propose fixes, and apply approved edits)</code></strong> and click <strong><code>Submit</code></strong>.</li>
+        <li>The agent compiles the proposed fixes into <code>goldfish_review_report.md</code>. Copy and paste the following reply to apply all proposed fixes to your spec:</li>
+      </ol>
+      <pre><code>auto accept</code></pre>
+      <p>Once the fixes are applied (if asked how to proceed next), select <strong><code>Conclude review and finalize document</code></strong>.</p>
     </google-codelab-step>
 
     <google-codelab-step label="Step 5: Build the App from the Approved Spec" duration="10">
@@ -199,14 +265,14 @@
 
       <h2>1. Implement the Spec with a Single Sentence</h2>
       <p>Copy and paste <strong>Prompt 7</strong> into the Antigravity chat:</p>
-      <pre><code>Implement docs/designs/retropulse.md and start the local server on port 8000.</code></pre>
+      <pre><code>Implement docs/designs/retropulse.md and start the local server on port 8000 with --reload.</code></pre>
       <p>Watch what Antigravity does autonomously from that single line:</p>
       <ol>
         <li>Reads <code>docs/designs/retropulse.md</code>.</li>
         <li>Initializes the Python project with <code>uv</code> (<code>pyproject.toml</code>) and installs <code>fastapi</code> and <code>uvicorn</code>.</li>
         <li>Creates <code>main.py</code> with the in-memory store, Pydantic validation (<code>max_length=280</code>), and REST endpoints.</li>
         <li>Creates <code>static/index.html</code> with the 3-column layout (<em>Went Well</em>, <em>To Improve</em>, <em>Action Items</em>).</li>
-        <li>Starts the server with <code>uv run uvicorn main:app --host 0.0.0.0 --port 8000</code>.</li>
+        <li>Starts the server with <code>uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload</code>.</li>
       </ol>
 
       <h2>2. Test RetroPulse in Your Browser</h2>
@@ -278,7 +344,7 @@
 
       <h2>1. Generate the Multi-Stage Dockerfile &amp; Deploy</h2>
       <p>Copy and paste <strong>Prompt 12</strong> into Antigravity (replacing <code>YOUR_GCP_PROJECT_ID</code> if you are deploying to Google Cloud):</p>
-      <pre><code>Update docs/designs/retropulse.md and the project to include a production multi-stage Dockerfile optimized for size (using python:3.12-slim with uv as the builder stage and gcr.io/distroless/python3-debian12:nonroot as the final runtime stage, listening on PORT=8080).
+      <pre><code>Update docs/designs/retropulse.md and the project to include a production multi-stage Dockerfile optimized for size (using python:3.11-slim-bookworm with uv as the builder stage and gcr.io/distroless/python3-debian12:nonroot as the final runtime stage, listening on PORT=8080).
 
 If I provide a Google Cloud Project ID (YOUR_GCP_PROJECT_ID), give me the exact gcloud commands to:
 1. Create a dedicated least-privilege service account `retropulse-sa`.
@@ -292,7 +358,71 @@ If I provide a Google Cloud Project ID (YOUR_GCP_PROJECT_ID), give me the exact 
 
   <script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
   <script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
-  <script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
   <script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+  <script>
+    (function () {
+      if (localStorage.getItem('codelab-code-theme') === 'light') {
+        document.body.classList.add('code-light');
+      }
+
+      function enhanceCodeBlocks() {
+        document.querySelectorAll('google-codelab-step pre').forEach(function (pre) {
+          if (pre.parentElement && pre.parentElement.classList.contains('code-block-wrapper')) {
+            return;
+          }
+          var wrapper = document.createElement('div');
+          wrapper.className = 'code-block-wrapper';
+          pre.parentNode.insertBefore(wrapper, pre);
+
+          var actions = document.createElement('div');
+          actions.className = 'code-block-actions';
+
+          var themeBtn = document.createElement('button');
+          themeBtn.type = 'button';
+          themeBtn.className = 'code-action-btn';
+          themeBtn.title = 'Dark/Light code theme';
+          themeBtn.setAttribute('aria-label', 'Toggle dark or light code theme');
+          themeBtn.innerHTML = '<i class="material-icons">brightness_medium</i>';
+          themeBtn.addEventListener('click', function () {
+            var isLight = document.body.classList.toggle('code-light');
+            localStorage.setItem('codelab-code-theme', isLight ? 'light' : 'dark');
+          });
+
+          var copyBtn = document.createElement('button');
+          copyBtn.type = 'button';
+          copyBtn.className = 'code-action-btn';
+          copyBtn.title = 'Copy code sample';
+          copyBtn.setAttribute('aria-label', 'Copy code sample');
+          copyBtn.innerHTML = '<i class="material-icons">content_copy</i>';
+          copyBtn.addEventListener('click', function () {
+            var text = (pre.querySelector('code') || pre).textContent;
+            navigator.clipboard.writeText(text).then(function () {
+              copyBtn.classList.add('copied');
+              copyBtn.title = 'Copied!';
+              copyBtn.innerHTML = '<i class="material-icons">check</i>';
+              setTimeout(function () {
+                copyBtn.classList.remove('copied');
+                copyBtn.title = 'Copy code sample';
+                copyBtn.innerHTML = '<i class="material-icons">content_copy</i>';
+              }, 1500);
+            });
+          });
+
+          actions.appendChild(themeBtn);
+          actions.appendChild(copyBtn);
+          wrapper.appendChild(actions);
+          wrapper.appendChild(pre);
+        });
+      }
+
+      var codelab = document.querySelector('google-codelab');
+      if (codelab && codelab.hasAttribute('google-codelab-ready')) {
+        enhanceCodeBlocks();
+      } else {
+        window.addEventListener('google-codelab-ready', enhanceCodeBlocks);
+        window.addEventListener('load', enhanceCodeBlocks);
+      }
+    })();
+  </script>
 </body>
 </html>

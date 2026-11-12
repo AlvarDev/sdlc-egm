@@ -51,11 +51,11 @@ This guide covers both parts of your 90-minute session:
 
 | Time | Workshop Step | Facilitator Tips & What to Watch For |
 | :--- | :--- | :--- |
-| **00–05m** | **Step 1: Empty Folder & Install EGM** | Ensure attendees open a completely empty `retropulse` folder in the **Antigravity App**. Remind them: no terminal commands needed! |
-| **05–15m** | **Step 2: `/egm:egm-brainstorm`** | Point out how **Prompt 2** answers the Elephant's clarifying questions *and* declares `uv` + `FastAPI` over Golang. Open `concepts_brief.md` on screen once generated to show attendees that their stack choice is now saved on disk under `## Key Decisions` and `## Alternatives Weighed`. |
-| **15–25m** | **Step 3: `/egm:egm-draft`** | Walk attendees through clicking **`Approve [Section Name] and proceed to next section`** across the 4 gates (`Overview & Goals` $\rightarrow$ `Technical Plan` $\rightarrow$ `Alternatives Considered` $\rightarrow$ `Detailed Implementation`). Emphasize that the Elephant is forbidden from writing `.py` or `.html` files during this phase. |
+| **00–05m** | **Step 1: Install EGM & Set Up Workspace** | Have attendees install EGM first (**Customizations > `egm` > Install**), then click **Create Project**, add their empty `retropulse` folder, and click **Next**. Remind them: no terminal commands needed! |
+| **05–15m** | **Step 2: `/egm:egm-brainstorm`** | Point out how **Prompt 2** answers the Elephant's clarifying questions *and* declares `uv` + `FastAPI` over Golang. Mention that attendees with existing Global Rules (`GEMINI.md` / `AGENTS.md`) may see extra rule-specific questions! Open `concepts_brief.md` once generated to show their choices saved on disk. |
+| **15–25m** | **Step 3: `/egm:egm-draft`** | Walk attendees through selecting **`1. Approve [Section] and proceed to next section` > `Submit`** across the 4 gates (or pasting the fallback prompt in chat if the popup doesn't appear). Emphasize that the Elephant writes zero `.py` or `.html` files during this phase. |
 | **25–35m** | **Step 4: `/egm:egm-review`** | Have attendees select **`Implementation plan only`** at the preset menu so the review finishes in ~2 minutes. Explain that in production they can run the full 5-stage `Interactive` or `Consolidated` review. |
-| **35–45m** | **Step 5: Implement from Spec** | Highlight the magic of **Prompt 7**: `"Implement docs/designs/retropulse.md and start the local server on port 8000."` Because everything is in `docs/designs/retropulse.md`, we don't repeat `uv`, `FastAPI`, or `index.html` in the prompt! |
+| **35–45m** | **Step 5: Implement from Spec** | Highlight the magic of **Prompt 7**: `"Implement docs/designs/retropulse.md and start the local server on port 8000 with --reload."` Because everything is in `docs/designs/retropulse.md`, we don't repeat `uv`, `FastAPI`, or `index.html` in the prompt! |
 | **45–55m** | **Step 6: `/egm:egm-drift-report`** | **The "Aha!" Moment**:<br>1) Run `/egm:egm-drift-report docs/designs/` $\rightarrow$ `No drift detected.`<br>2) Have attendees manually edit `280` $\rightarrow$ `50` in `main.py`.<br>3) Have attendees open a **`+ New Conversation`** and paste **Prompt 9** to vibe-code the `author` field and `DELETE /api/cards` button.<br>4) Run `/egm:egm-drift-report docs/designs/` and show how EGM catches *both* the `50`-char manual tweak and the undocumented feature! |
 | **55–60m** | **Step 7: Optional Cloud Run Bonus** | Demo or walk through **Prompt 12** showing the multi-stage Distroless `Dockerfile` and least-privilege Service Account deployment to `southamerica-east1`. |
 
@@ -440,8 +440,8 @@ def upvote_card(card_id: int) -> Card:
 ### 4. Reference Multi-Stage Distroless `Dockerfile` & Cloud Run Commands (Step 7 Bonus)
 
 ```dockerfile
-# Stage 1: Build dependencies using uv
-FROM python:3.12-slim AS builder
+# Stage 1: Build dependencies using uv (matching Debian 12 Python 3.11 ABI)
+FROM python:3.11-slim-bookworm AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
@@ -454,14 +454,15 @@ RUN uv sync --no-install-project --no-dev --no-config --index-url https://pypi.o
 
 COPY main.py ./
 COPY static ./static
+RUN chmod -R a+rX /app
 
-# Stage 2: Minimal non-root Google Distroless runtime
+# Stage 2: Minimal non-root Google Distroless runtime (Debian 12 / Python 3.11)
 FROM gcr.io/distroless/python3-debian12:nonroot
 
 WORKDIR /app
-COPY --from=builder /app/.venv/lib/python3.12/site-packages /app/site-packages
-COPY --from=builder /app/main.py /app/main.py
-COPY --from=builder /app/static /app/static
+COPY --chown=nonroot:nonroot --from=builder /app/.venv/lib/python3.11/site-packages /app/site-packages
+COPY --chown=nonroot:nonroot --from=builder /app/main.py /app/main.py
+COPY --chown=nonroot:nonroot --from=builder /app/static /app/static
 
 ENV PYTHONPATH="/app/site-packages" \
     PORT=8080

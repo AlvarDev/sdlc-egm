@@ -1,8 +1,12 @@
 # Hands-On Workshop Guide: Spec-Driven Development with Antigravity & EGM
 
-> **Duration:** 60 Minutes  
+> **Author:** AlvarDev | **Last Updated:** Nov 12, 2026 | **Duration:** 60 Minutes  
 > **App Built:** **RetroPulse** — A 3-Column Sprint Retrospective Board (`uv` + FastAPI + Vanilla HTML/CSS/JS)  
 > **Cloud Requirement:** None for Steps 1–6 (100% local). Step 7 is an optional bonus for Google Cloud Run.
+
+Welcome to the hands-on workshop on **Spec-Driven Development (SDD)** with **Google Antigravity** and the **Elephant-Goldfish Model (EGM)**.
+
+![Elephant-Goldfish Model (EGM)](../docs/img/og-egm.png)
 
 ---
 
@@ -31,19 +35,20 @@ sequenceDiagram
 
 ---
 
-## Step 1: Set Up Your Workspace & Install EGM (5 min)
+## Step 1: Install EGM & Set Up Your Workspace (5 min)
 
-1. Create a brand-new, empty folder on your machine named `retropulse`.
-2. Open the **Antigravity App** and open the empty `retropulse` folder (**File > Open Folder...**).
-3. In the Antigravity chat panel, install the [Elephant-Goldfish Model (EGM) plugin](https://github.com/google/elephant-goldfish-model) by copying and pasting:
+1. Open the **Antigravity App**, click **Customizations** in the left sidebar, search for `egm`, select **[Elephant-Goldfish Model](https://github.com/google/elephant-goldfish-model)**, and click **Install**.
 
-```text
-Install https://github.com/google/elephant-goldfish-model
-```
+![Install Elephant-Goldfish Model in Customizations](../docs/img/step1-install-egm.png)
 
-*(Alternatively, run `/plugin` in the Antigravity App or `agy plugin install https://github.com/google/elephant-goldfish-model` in the CLI).*
+*(Alternatively, if you have the Antigravity CLI installed, you can run `agy plugin install https://github.com/google/elephant-goldfish-model` in any terminal).*
 
-4. Start a new chat or reload the window so the `/egm:*` commands are available.
+2. Create a brand-new, empty folder on your machine named `retropulse`.
+3. In the **Antigravity App**, click **Create Project**, add the `retropulse` folder you created (**+ Add Folder**), and click **Next**.
+
+![Create Project in Antigravity App](../docs/img/step1-create-project.png)
+
+Your new project session now has the `/egm:*` commands ready to use.
 
 ---
 
@@ -59,21 +64,20 @@ Copy and paste **Prompt 1** into the Antigravity chat:
 ### 2.2 Answer Clarifying Questions & Declare Your Tech Stack
 The Elephant will interview you in chat about your target users, constraints, non-goals, success metrics, and author name.
 
-> [!IMPORTANT]
-> **Why declare `uv` and `FastAPI` here?**  
-> Because your folder is empty, you must tell the Elephant which language and framework to use (e.g., Python with `uv` + FastAPI instead of Golang or Node.js). The Elephant writes your answers directly to disk inside **`concepts_brief.md`** (`## Key Decisions & Staging for Next Steps` and `## Alternatives Weighed`), so your choices become a permanent project record rather than getting lost in chat history.
+> [!NOTE]
+> **Using your own Global Rules or Skills?**  
+> If you already have personal [Global Rules](https://antigravity.google/docs/rules#global-rules) (such as `~/.gemini/GEMINI.md`, `AGENTS.md`, or **Customizations > Rules**) or custom skills configured in Antigravity, the Elephant's questions may include extra items tailored to your rules (for example, authentication or cloud defaults). You can either address those extra rules alongside **Prompt 2**, or temporarily disable your global rules if you want a clean sandbox for this workshop.
 
 Copy and paste **Prompt 2**:
 
 ```text
 Here are our answers and architectural constraints:
 - Author: Workshop Attendee
-- Problem & Users: A single engineering team (up to 20 people) needs a fast, zero-setup board during live sprint retrospectives without logging into heavy project management tools.
-- Tech Stack Choice: Python managed with `uv`, using `fastapi` and `uvicorn` (chosen over Golang or Node.js for rapid Pydantic schema validation), serving a single-page frontend in `static/index.html` built with vanilla HTML, CSS, and JavaScript.
-- Storage Constraint: Strictly in-memory Python list/dict in `main.py` (no SQLite, Postgres, or external databases; resetting on server restart is expected).
-- Functional Rules: Each card has `id`, `text` (non-empty, max 280 characters), `category` ("Went Well", "To Improve", or "Action Items"), and `votes` (integer starting at 0, incrementing by +1 per upvote).
-- Out of Scope (Non-Goals for v1): No user authentication, no card deletion, no card editing, no author field on cards.
-- Success Metric: Users can open `http://localhost:8000`, create cards in any of the 3 columns, and upvote cards with sub-100ms response time.
+- Problem & Existing Alternatives: Today our single engineering team (up to 20 people) uses ad-hoc shared docs because SaaS tools (EasyRetro, Miro) require external accounts and store sprint feedback off-machine. We need a zero-login, strictly local ephemeral board with zero external data residency.
+- Usage & Concurrency Model: A single shared board accessed by teammates over HTTP (`http://localhost:8000` or a shared local URL) backed by server memory—using standard synchronous REST `fetch` requests on load and user actions (no WebSockets or Server-Sent Events needed for v1).
+- Voting & Card Lifecycle: Each card has `id`, `text` (non-empty, max 280 characters), `category` ("Went Well", "To Improve", or "Action Items"), and `votes` (starting at 0, unlimited anonymous `+1` clicks with no per-user vote cap or session tracking). Cards are immutable once posted—no editing, deleting, or converting/moving cards between columns.
+- Tech Stack & Persistence: Python managed with `uv`, using `fastapi` and `uvicorn` (chosen over Golang or Node.js for rapid Pydantic schema validation), serving a single-page frontend in `static/index.html` built with vanilla HTML, CSS, and JavaScript. Storage is strictly an in-memory Python list/dict in `main.py` (no SQLite, Postgres, or external databases; resetting on server restart is desired).
+- Out of Scope & Success Metric: No user authentication, no author attribution on cards, and no multiple boards/rooms. Users can open `http://localhost:8000`, post cards in any of the 3 columns, and upvote cards with sub-100ms response time.
 ```
 
 ### 2.3 Run the Goldfish Brainstorm Swarm
@@ -82,17 +86,22 @@ Here are our answers and architectural constraints:
 3. When the Elephant highlights 2–3 edge-case objections in chat, copy and paste **Prompt 3**:
 
 ```text
-Keep the scope strictly minimal for v1: enforce category validation ("Went Well", "To Improve", "Action Items") and strip whitespace in the FastAPI Pydantic model so empty strings are rejected with HTTP 422. I am aligned with `concepts_brief.md`—let's finalize the brief.
+Keep the scope strictly minimal for v1 with these decisions:
+- API Routes & Board Sync: Lock in `GET /` (serves `static/index.html`), `GET /api/cards`, `POST /api/cards`, and `POST /api/cards/{card_id}/upvote`. Fetch `GET /api/cards` on page load, card creation, and upvote, relying on standard browser refresh for passive readers (no background polling timers).
+- Process & ID Model: Run Uvicorn strictly as a single worker process (`--workers 1`) and use sequential integer IDs (`1, 2, 3...`), accepting stale browser tabs if the ephemeral server restarts.
+- Ordering, Validation & Memory: Render cards in stable creation order (no dynamic re-sorting on `+1` clicks so cards never jump beneath the cursor), enforce category validation ("Went Well", "To Improve", "Action Items") and whitespace-stripped 1..280 character validation in Pydantic (rejecting empty/whitespace strings with HTTP 422), and skip hard card-count caps for a trusted 20-person team.
+
+Please record these decisions in `concepts_brief.md` and finalize the brief.
 ```
 
-4. At the handoff gate, select **`Proceed to egm-draft (Initialize formal design document)`**.
+4. At the handoff options, click **`Proceed to egm-draft (Initialize formal design document)`** if shown as a button, or proceed directly to **Step 3** and run `/egm:egm-draft`.
 
 ---
 
 ## Step 3: Draft the Specification (`/egm:egm-draft`) (10 min)
 
 ### 3.1 Start Drafting
-Copy and paste **Prompt 4**:
+If you did not already launch `egm-draft` from a handoff button at the end of Step 2, copy and paste **Prompt 4**:
 
 ```text
 /egm:egm-draft
@@ -101,18 +110,28 @@ Copy and paste **Prompt 4**:
 *(If asked in chat to confirm starting from `concepts_brief.md`, reply: `Yes, proceed with drafting from concepts_brief.md.`)*
 
 ### 3.2 Approve the 4 Interactive Checkpoints
-The Elephant builds `design_draft.md` across 4 sequential checkpoints. Review `design_draft.md` in the side panel at each step and click the approval option:
+The Elephant builds `design_draft.md` across 4 sequential checkpoints. At each checkpoint, click **`Review`** (or **`design_draft.md`**) to inspect what was written to disk, then select **`1. Approve [Section] and proceed to next section`** and click **`Submit`**:
 
-| Checkpoint | Section Added to `design_draft.md` | Action to Select |
-| :--- | :--- | :--- |
-| **1. Overview & Goals** | `Overview`, `The Problem`, `Goals`, `Non-Goals`, `Critical User Journeys (CUJs)` | `Approve Overview & Goals and proceed to next section` |
-| **2. Technical Plan** | `Technical Plan (Architecture)`: `uv` + FastAPI routes (`GET /api/cards`, `POST /api/cards`, `POST /api/cards/{id}/upvote`), Pydantic model (`max_length=280`), `static/index.html` | `Approve Technical Plan and proceed to next section` |
-| **3. Alternatives** | `Alternatives Considered`: Documents why Golang, Node.js, and external DBs were rejected | `Approve Alternatives Considered and proceed to next section` |
-| **4. Implementation** | `Detailed Implementation Plan`: Lists exact files (`pyproject.toml`, `main.py`, `static/index.html`) and `Verification Plan` (`uv` commands) | `Approve Detailed Implementation and proceed to next section` |
+| Checkpoint | Section Added to `design_draft.md` |
+| :--- | :--- |
+| **1. Overview & Goals** | `Overview`, `The Problem`, `Goals`, `Non-Goals`, `Critical User Journeys (CUJs)` |
+| **2. Technical Plan** | `Technical Plan (Architecture)`: `uv` + FastAPI routes (`GET /api/cards`, `POST /api/cards`, `POST /api/cards/{card_id}/upvote`), Pydantic model (`max_length=280`), `static/index.html` |
+| **3. Alternatives** | `Alternatives Considered`: Documents why Golang, Node.js, and external DBs were rejected |
+| **4. Implementation** | `Detailed Implementation Plan`: Lists exact files (`pyproject.toml`, `main.py`, `static/index.html`) and `Verification Plan` (`uv` commands) |
+
+> [!TIP]
+> **No approval buttons shown?** If the agent finishes a section without displaying the clickable approval options, copy and paste this prompt into chat:
+
+```text
+Approve this section and proceed to the next section.
+```
 
 ### 3.3 Save the Specification
-When prompted where to save the finalized specification, select:
-* **`Save to detected directory: docs/designs/`**
+When prompted where to save the finalized specification, select **`Save to detected directory: docs/designs/`** if shown as a button, or reply in chat:
+
+```text
+Save the finalized specification to docs/designs/retropulse.md.
+```
 
 This saves your specification to **`docs/designs/retropulse.md`**.
 
@@ -135,8 +154,14 @@ Proceed with no additional context files.
 3. At the **Review Execution Mode** selector, choose:
    * **`Implementation plan only (evaluate design for implementation readiness)`**
 4. Once `implementation_readiness_report.md` is generated:
-   * Choose **`Resolve findings with agent`** if you want the Elephant to patch any flagged gaps in `docs/designs/retropulse.md`, or
-   * Choose **`Conclude review and finalize document`**.
+   * Select **`2. Resolve findings with agent (evaluate findings, propose fixes, and apply approved edits)`** and click **`Submit`**.
+   * When `goldfish_review_report.md` is ready, copy and paste **`auto accept`** to apply all proposed fixes:
+
+```text
+auto accept
+```
+
+   * Once applied (if asked how to proceed next), select **`Conclude review and finalize document`**.
 
 ---
 
@@ -148,7 +173,7 @@ Because `docs/designs/retropulse.md` already documents `uv`, `fastapi`, `uvicorn
 Copy and paste **Prompt 7**:
 
 ```text
-Implement docs/designs/retropulse.md and start the local server on port 8000.
+Implement docs/designs/retropulse.md and start the local server on port 8000 with --reload.
 ```
 
 ### 5.2 Test the App Locally
@@ -220,7 +245,7 @@ Reconcile the drift between docs/designs/retropulse.md and the codebase:
 Copy and paste **Prompt 12** (replace `YOUR_GCP_PROJECT_ID` if deploying):
 
 ```text
-Update docs/designs/retropulse.md and the project to include a production multi-stage Dockerfile optimized for size (using python:3.12-slim with uv as the builder stage and gcr.io/distroless/python3-debian12:nonroot as the final runtime stage, listening on PORT=8080).
+Update docs/designs/retropulse.md and the project to include a production multi-stage Dockerfile optimized for size (using python:3.11-slim-bookworm with uv as the builder stage and gcr.io/distroless/python3-debian12:nonroot as the final runtime stage, listening on PORT=8080).
 
 If I provide a Google Cloud Project ID (YOUR_GCP_PROJECT_ID), give me the exact gcloud commands to:
 1. Create a dedicated least-privilege service account `retropulse-sa`.

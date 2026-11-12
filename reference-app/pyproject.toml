@@ -1,0 +1,9 @@
+[project]
+name = "retropulse"
+version = "0.1.0"
+description = "RetroPulse — Lightweight Sprint Retrospective Board (v1 & v2 Workshop Demo)"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn>=0.32.0",
+]

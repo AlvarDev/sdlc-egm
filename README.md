@@ -4,12 +4,17 @@ Hands-on workshop and presentation materials for **Spec-Driven Development (SDD)
 
 ---
 
-## 🚀 Live Interactive Codelab
+## 🚀 Live Interactive Codelab & Demo App
 
 Follow the interactive, step-by-step Google Codelab in your browser:
 
 * **Cloud Run Codelab**: [https://sdd-egm-codelab-1010474272420.southamerica-east1.run.app](https://sdd-egm-codelab-1010474272420.southamerica-east1.run.app)
 * **GitHub Pages Codelab**: [https://alvardev.github.io/sdlc-egm/](https://alvardev.github.io/sdlc-egm/)
+
+Try the live **RetroPulse** application on Cloud Run (`southamerica-east1`):
+
+* **RetroPulse v1 (Step 5 Spec)**: [https://retropulse-demo-1010474272420.southamerica-east1.run.app/](https://retropulse-demo-1010474272420.southamerica-east1.run.app/)
+* **RetroPulse v2 (Step 6 + Author & Clear Board)**: [https://retropulse-demo-1010474272420.southamerica-east1.run.app/v2](https://retropulse-demo-1010474272420.southamerica-east1.run.app/v2)
 
 ---
 
