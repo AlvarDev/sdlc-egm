@@ -1,0 +1,298 @@
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Spec-Driven Development with Antigravity &amp; the Elephant-Goldfish Model (EGM)</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab id="sdd-egm-antigravity"
+                  title="Spec-Driven Development with Antigravity &amp; the Elephant-Goldfish Model (EGM)"
+                  environment="web">
+
+    <google-codelab-step label="Overview" duration="5">
+      <p>Welcome to the hands-on workshop on <strong>Spec-Driven Development (SDD)</strong> with <strong>Google Antigravity</strong> and the <strong>Elephant-Goldfish Model (EGM)</strong>.</p>
+      <p>Instead of unstructured &ldquo;vibe coding&rdquo; (prompting an AI to write code directly and hoping for the best), Spec-Driven Development treats your <strong>technical specification</strong> as the single source of truth. In this workshop, you will take SDD a step further using the open-source <a href="https://github.com/google/elephant-goldfish-model" target="_blank">Elephant-Goldfish Model (EGM) plugin</a>:</p>
+      <ul>
+        <li><strong>The Elephant (Long-Horizon Context)</strong>: Collaborates with you to brainstorm requirements, weigh architectural trade-offs, and draft a formal specification (<code>docs/designs/retropulse.md</code>)&mdash;without writing production code.</li>
+        <li><strong>The Goldfish (Stateless Adversarial Reviewers)</strong>: Isolated subagents spawned with <strong>zero conversation history</strong> that review your specification with fresh eyes to catch hidden assumptions, missing edge cases, and ambiguities before a single line of code is written.</li>
+        <li><strong>You (The Architect)</strong>: Make the architectural decisions, approve the specification, and govern alignment between your design and codebase using automated <strong>drift detection</strong>.</li>
+      </ul>
+
+      <h2 class="checklist">What You Will Build</h2>
+      <p>You will build <strong>RetroPulse</strong>, a lightweight Sprint Retrospective Board web application from a completely empty folder:</p>
+      <ul>
+        <li><strong>Backend</strong>: Python managed with <code>uv</code> and <strong>FastAPI</strong> (<code>main.py</code>) with in-memory state.</li>
+        <li><strong>Frontend</strong>: A responsive 3-column single-page interface (<code>static/index.html</code>) built with vanilla HTML, CSS, and JavaScript (<em>Went Well</em>, <em>To Improve</em>, <em>Action Items</em>) with card creation and upvoting.</li>
+        <li><strong>No Google Cloud Project Required</strong>: Steps 1 through 6 run <strong>100% locally</strong> on your machine. Step 7 is an optional bonus for deploying your containerized app to <strong>Google Cloud Run</strong>.</li>
+      </ul>
+
+      <h2 class="checklist">What You Will Learn</h2>
+      <ul class="checklist">
+        <li>How to turn a raw product idea into an anchored <code>concepts_brief.md</code> using <code>/egm:egm-brainstorm</code>.</li>
+        <li>How to declare your tech stack (<code>uv</code> + FastAPI) and document rejected alternatives in <code>docs/designs/retropulse.md</code> using <code>/egm:egm-draft</code>.</li>
+        <li>How to run stateless adversarial reviews on your specification using <code>/egm:egm-review</code>.</li>
+        <li>How to generate a complete working application from a single-line prompt referencing your approved specification.</li>
+        <li>How to detect both silent manual code edits and &ldquo;vibe-coded&rdquo; features using <code>/egm:egm-drift-report</code>.</li>
+      </ul>
+
+      <h2>Prerequisites</h2>
+      <ul>
+        <li><a href="https://antigravity.google" target="_blank">Google Antigravity App</a> installed on your machine.</li>
+        <li>Python 3.10+ and <a href="https://docs.astral.sh/uv/getting-started/installation/" target="_blank"><code>uv</code></a> installed locally.</li>
+        <li><em>(Optional for Step 7)</em> A Google Cloud Project with billing enabled and the <a href="https://cloud.google.com/sdk/docs/install" target="_blank"><code>gcloud</code> CLI</a> installed.</li>
+      </ul>
+    </google-codelab-step>
+
+    <google-codelab-step label="Step 1: Set Up Your Workspace &amp; Install EGM" duration="5">
+      <p>You will start completely from scratch in an empty folder&mdash;no starter repository, no pre-written code, and no manual terminal setup required.</p>
+
+      <h2>1. Create and Open an Empty Folder</h2>
+      <ol>
+        <li>Create a new empty folder on your computer named <code>retropulse</code>.</li>
+        <li>Open the <strong>Antigravity App</strong> and select <strong>File &gt; Open Folder...</strong> to open <code>retropulse</code>.</li>
+      </ol>
+
+      <h2>2. Install the EGM Plugin</h2>
+      <p>In the Antigravity App agent chat panel, install the open-source Elephant-Goldfish Model plugin by copying and pasting the following prompt (or using <code>/plugin</code>):</p>
+      <pre><code>Install https://github.com/google/elephant-goldfish-model</code></pre>
+
+      <aside class="special">
+        <p><strong>Tip:</strong> If you also have the Antigravity CLI (<code>agy</code>) installed, you can install the plugin from any terminal with:<br>
+        <code>agy plugin install https://github.com/google/elephant-goldfish-model</code></p>
+      </aside>
+
+      <p>Once installed, start a fresh session or reload the window so the <code>/egm:*</code> skills (<code>egm-brainstorm</code>, <code>egm-draft</code>, <code>egm-review</code>, <code>egm-resolve</code>, and <code>egm-drift-report</code>) and Goldfish reviewer subagents are active.</p>
+    </google-codelab-step>
+
+    <google-codelab-step label="Step 2: Brainstorm with the Elephant (/egm:egm-brainstorm)" duration="10">
+      <p>In EGM, you never ask the agent to write code right away. Instead, you start an upstream ideation session with <strong>the Elephant</strong> using <code>/egm:egm-brainstorm</code>.</p>
+
+      <h2>1. Start the Brainstorm Session</h2>
+      <p>Copy and paste <strong>Prompt 1</strong> into the Antigravity chat:</p>
+      <pre><code>/egm:egm-brainstorm Build a Sprint Retro Board web application ("RetroPulse") where team members can post cards into three columns ("Went Well", "To Improve", "Action Items") and upvote cards.</code></pre>
+
+      <h2>2. Answer the Elephant&#39;s Clarifying Questions &amp; Declare Your Tech Stack</h2>
+      <p>Because the <code>retropulse</code> folder is completely empty, the Elephant does not yet know your target users, constraints, or which tech stack you want to use (<code>uv</code> + FastAPI vs. Golang or Node.js).</p>
+      <p>The Elephant will interview you in chat about your problem statement, users, constraints, non-goals, success metrics, and author name.</p>
+
+      <aside class="special">
+        <p><strong>Where is your tech stack recorded?</strong><br>
+        When you answer the Elephant&#39;s questions in chat, your choices are <strong>not</strong> left in chat history. At the end of this step, the Elephant writes your answers directly into a file on disk called <code>concepts_brief.md</code> under <code>## Key Decisions &amp; Staging for Next Steps</code> and <code>## Alternatives Weighed</code>.</p>
+      </aside>
+
+      <p>Copy and paste <strong>Prompt 2</strong> to answer all of the Elephant&#39;s clarifying questions and declare your architecture in one turn:</p>
+      <pre><code>Here are our answers and architectural constraints:
+- Author: Workshop Attendee
+- Problem &amp; Users: A single engineering team (up to 20 people) needs a fast, zero-setup board during live sprint retrospectives without logging into heavy project management tools.
+- Tech Stack Choice: Python managed with `uv`, using `fastapi` and `uvicorn` (chosen over Golang or Node.js for rapid Pydantic schema validation), serving a single-page frontend in `static/index.html` built with vanilla HTML, CSS, and JavaScript.
+- Storage Constraint: Strictly in-memory Python list/dict in `main.py` (no SQLite, Postgres, or external databases; resetting on server restart is expected).
+- Functional Rules: Each card has `id`, `text` (non-empty, max 280 characters), `category` ("Went Well", "To Improve", or "Action Items"), and `votes` (integer starting at 0, incrementing by +1 per upvote).
+- Out of Scope (Non-Goals for v1): No user authentication, no card deletion, no card editing, no author field on cards.
+- Success Metric: Users can open `http://localhost:8000`, create cards in any of the 3 columns, and upvote cards with sub-100ms response time.</code></pre>
+
+      <h2>3. Trigger the Goldfish Brainstorm Swarm</h2>
+      <p>After reading your constraints, the Elephant summarizes the anchored hypothesis and presents a single-select confirmation gate in chat:</p>
+      <ol>
+        <li>Select <strong><code>Review with Goldfishes</code></strong>.</li>
+        <li>Behind the scenes, the Elephant spawns <strong>7 stateless Goldfish subagents in parallel</strong> (<em>Contrarian/YAGNI</em>, <em>Cost &amp; Quota</em>, <em>UX &amp; Ergonomics</em>, <em>Migration</em>, <em>Observability</em>, <em>Tech Debt</em>, and <em>Inventive Catalyst</em>) to challenge your concept.</li>
+        <li>The Elephant synthesizes their findings and writes <strong><code>concepts_brief.md</code></strong> to your workspace.</li>
+      </ol>
+
+      <h2>4. Finalize the Brief and Hand Off to Drafting</h2>
+      <p>The Elephant will highlight 2&ndash;3 edge cases raised by the Goldfish reviewers (such as handling invalid category names, concurrent upvote requests, or whitespace-only card text).</p>
+      <p>Copy and paste <strong>Prompt 3</strong> to align on those edge cases and finalize the brief:</p>
+      <pre><code>Keep the scope strictly minimal for v1: enforce category validation ("Went Well", "To Improve", "Action Items") and strip whitespace in the FastAPI Pydantic model so empty strings are rejected with HTTP 422. I am aligned with `concepts_brief.md`—let's finalize the brief.</code></pre>
+      <p>When the handoff menu appears, select:</p>
+      <ul>
+        <li><strong><code>Proceed to egm-draft (Initialize formal design document)</code></strong></li>
+      </ul>
+    </google-codelab-step>
+
+    <google-codelab-step label="Step 3: Draft the Specification (/egm:egm-draft)" duration="10">
+      <p>Now that <code>concepts_brief.md</code> is saved on disk, you will use <code>/egm:egm-draft</code> to turn the brief into a formal engineering specification (<code>docs/designs/retropulse.md</code>).</p>
+
+      <h2>1. Start the Drafting Workflow</h2>
+      <p>Copy and paste <strong>Prompt 4</strong> into the Antigravity chat:</p>
+      <pre><code>/egm:egm-draft</code></pre>
+      <p>The Elephant automatically detects and reads <code>concepts_brief.md</code> from disk and asks for confirmation to start drafting. If prompted in chat to confirm, reply:</p>
+      <pre><code>Yes, proceed with drafting from concepts_brief.md.</code></pre>
+
+      <h2>2. Review and Approve the 4 Specification Sections</h2>
+      <p>Instead of dumping a massive document into chat, <code>/egm:egm-draft</code> writes <strong><code>design_draft.md</code></strong> section by section, pausing after each section with a 2-option approval button so you remain in control:</p>
+      <ol>
+        <li><strong>Checkpoint 1 &mdash; <code>Overview &amp; Goals</code></strong>:<br>
+        Writes <code>## Overview</code>, <code>## The Problem</code>, <code>## Goals</code>, <code>## Non-Goals</code>, and <code>## Critical User Journeys (CUJs)</code>. Open <code>design_draft.md</code> in the side panel, verify that card deletion and card authors are listed under <code>Non-Goals</code>, and click:<br>
+        <strong><code>Approve Overview &amp; Goals and proceed to next section</code></strong></li>
+        <li><strong>Checkpoint 2 &mdash; <code>Technical Plan</code></strong>:<br>
+        Appends <code>## Technical Plan (Architecture)</code>, documenting the FastAPI endpoints (<code>GET /api/cards</code>, <code>POST /api/cards</code>, <code>POST /api/cards/{id}/upvote</code>), the Pydantic model (<code>max_length=280</code>), in-memory storage, and <code>static/index.html</code>. Review the architecture and click:<br>
+        <strong><code>Approve Technical Plan and proceed to next section</code></strong></li>
+        <li><strong>Checkpoint 3 &mdash; <code>Alternatives Considered</code></strong>:<br>
+        Appends <code>## Alternatives Considered</code>, permanently documenting why <strong>Golang / Node.js</strong> and <strong>SQLite / external databases</strong> were rejected in favor of Python (<code>uv</code> + FastAPI) and in-memory state. Review and click:<br>
+        <strong><code>Approve Alternatives Considered and proceed to next section</code></strong></li>
+        <li><strong>Checkpoint 4 &mdash; <code>Detailed Implementation</code></strong>:<br>
+        Appends <code>## Detailed Implementation Plan</code>, listing <strong>every exact file to create</strong> (<code>pyproject.toml</code>, <code>main.py</code>, <code>static/index.html</code>) along with the <code>### Verification Plan</code> (<code>uv</code> commands). Notice that <strong>no production code is written yet</strong>&mdash;only the blueprint. Click:<br>
+        <strong><code>Approve Detailed Implementation and proceed to next section</code></strong></li>
+      </ol>
+
+      <h2>3. Save the Specification to <code>docs/designs/</code></h2>
+      <p>After the fourth checkpoint, the Elephant reconciles <code>design_draft.md</code> against <code>concepts_brief.md</code> and asks where to save the finalized specification. Select:</p>
+      <ul>
+        <li><strong><code>Save to detected directory: docs/designs/</code></strong></li>
+      </ul>
+      <p>Your specification is now saved on disk at <code>docs/designs/retropulse.md</code>.</p>
+    </google-codelab-step>
+
+    <google-codelab-step label="Step 4: Stateless Review with Goldfish (/egm:egm-review)" duration="10">
+      <p>Why shouldn&#39;t the Elephant just review its own specification? Because the Elephant carries the entire conversation history and hidden biases from Steps 2 and 3.</p>
+      <p>Now you will invoke <code>/egm:egm-review</code> to spawn <strong>stateless Goldfish subagents</strong> with <strong>zero conversation history</strong>. They only see <code>docs/designs/retropulse.md</code>.</p>
+
+      <h2>1. Launch <code>/egm:egm-review</code></h2>
+      <p>Copy and paste <strong>Prompt 5</strong> (adjusting the filename if your spec was saved under a slightly different name inside <code>docs/designs/</code>):</p>
+      <pre><code>/egm:egm-review docs/designs/retropulse.md</code></pre>
+
+      <h2>2. Provide Goldfish Context</h2>
+      <p>Because this is a brand-new project with no existing source code files yet, when the agent asks if you want to provide additional <code>GoldfishContext</code> files, copy and paste <strong>Prompt 6</strong>:</p>
+      <pre><code>Proceed with no additional context files.</code></pre>
+
+      <h2>3. Choose the Review Execution Mode</h2>
+      <p>EGM presents a 4-option preset menu:</p>
+      <ul>
+        <li><em>Interactive review with all review rubrics</em> (runs all 5 stages with pauses)</li>
+        <li><em>Consolidated report with all review rubrics</em> (runs all 5 stages uninterrupted)</li>
+        <li><em>Feature spec only</em> (runs Stages 5&ndash;8 on architecture)</li>
+        <li><em>Implementation plan only</em> (runs Stage 9 on implementation readiness)</li>
+      </ul>
+      <p>For this 1-hour workshop, select:</p>
+      <ul>
+        <li><strong><code>Implementation plan only (evaluate design for implementation readiness)</code></strong></li>
+      </ul>
+
+      <aside class="special">
+        <p><strong>What happens during Stage 9?</strong><br>
+        EGM spawns isolated subagents (<code>egm-implementation-readiness</code>, <code>egm-codebase-details</code>, and <code>egm-style</code>) in fresh contexts to verify that your <code>## Detailed Implementation Plan</code> in <code>docs/designs/retropulse.md</code> is unambiguous and complete enough for a zero-context coding agent to build without guessing.</p>
+      </aside>
+
+      <h2>4. Resolve Findings and Finalize the Spec</h2>
+      <p>When the Goldfish review completes, it writes <code>implementation_readiness_report.md</code> and presents a checkpoint menu:</p>
+      <ul>
+        <li>If the report found any missing details you want fixed, select <strong><code>Resolve findings with agent (evaluate findings, propose fixes, and apply approved edits)</code></strong> (which runs <code>/egm:egm-resolve</code>) and approve the proposed fixes.</li>
+        <li>Otherwise, select <strong><code>Conclude review and finalize document</code></strong>.</li>
+      </ul>
+    </google-codelab-step>
+
+    <google-codelab-step label="Step 5: Build the App from the Approved Spec" duration="10">
+      <p>Look at your workspace: you now have a verified, self-contained specification in <code>docs/designs/retropulse.md</code> that defines <code>uv</code>, <code>fastapi</code>, <code>uvicorn</code>, <code>main.py</code>, <code>static/index.html</code>, the API routes, and the data validation rules (<code>max_length=280</code>).</p>
+      <p>Because everything is documented in <code>docs/designs/retropulse.md</code>, <strong>you do not need to repeat your tech stack or requirements in the implementation prompt.</strong></p>
+
+      <h2>1. Implement the Spec with a Single Sentence</h2>
+      <p>Copy and paste <strong>Prompt 7</strong> into the Antigravity chat:</p>
+      <pre><code>Implement docs/designs/retropulse.md and start the local server on port 8000.</code></pre>
+      <p>Watch what Antigravity does autonomously from that single line:</p>
+      <ol>
+        <li>Reads <code>docs/designs/retropulse.md</code>.</li>
+        <li>Initializes the Python project with <code>uv</code> (<code>pyproject.toml</code>) and installs <code>fastapi</code> and <code>uvicorn</code>.</li>
+        <li>Creates <code>main.py</code> with the in-memory store, Pydantic validation (<code>max_length=280</code>), and REST endpoints.</li>
+        <li>Creates <code>static/index.html</code> with the 3-column layout (<em>Went Well</em>, <em>To Improve</em>, <em>Action Items</em>).</li>
+        <li>Starts the server with <code>uv run uvicorn main:app --host 0.0.0.0 --port 8000</code>.</li>
+      </ol>
+
+      <h2>2. Test RetroPulse in Your Browser</h2>
+      <ol>
+        <li>Open <a href="http://localhost:8000" target="_blank">http://localhost:8000</a> in your browser.</li>
+        <li>Add a card to <strong>Went Well</strong>, <strong>To Improve</strong>, and <strong>Action Items</strong>.</li>
+        <li>Click the <strong>Upvote (<code>+1</code>)</strong> button on a card and verify the counter increments immediately.</li>
+      </ol>
+    </google-codelab-step>
+
+    <google-codelab-step label="Step 6: Catch Spec-to-Code Drift (/egm:egm-drift-report)" duration="10">
+      <p>In real-world engineering, specifications often rot the moment someone makes a quick manual edit in the code or &ldquo;vibe-codes&rdquo; an urgent feature in a new chat session without updating the design doc.</p>
+      <p>EGM solves this with <strong><code>/egm:egm-drift-report</code></strong>, which audits your checked-in specifications (<code>docs/designs/</code>) against your actual source code.</p>
+
+      <h2>1. Verify Zero Baseline Drift</h2>
+      <p>First, verify that your v1 implementation matches <code>docs/designs/retropulse.md</code>. Copy and paste <strong>Prompt 8</strong>:</p>
+      <pre><code>/egm:egm-drift-report docs/designs/</code></pre>
+      <p>Open the generated <code>{YYYY-MM-DD}_DRIFT_REPORT.md</code> file. Because the app was built strictly from <code>docs/designs/retropulse.md</code>, it reports:</p>
+      <ul>
+        <li><strong><code>No drift detected.</code></strong></li>
+      </ul>
+
+      <h2>2. Create Drift #1: A Silent 1-Line Manual Code Change</h2>
+      <p>Let&#39;s simulate a developer silently changing a validation rule in the code:</p>
+      <ol>
+        <li>Open <code>main.py</code> in the Antigravity App file editor.</li>
+        <li>Find the card text maximum character limit (<code>280</code>) in the Pydantic model or validation logic.</li>
+        <li>Manually change <code>280</code> to <strong><code>50</code></strong> and save <code>main.py</code>.</li>
+      </ol>
+
+      <h2>3. Create Drift #2: &ldquo;Vibe Coding&rdquo; a New Feature in a New Conversation</h2>
+      <p>Now let&#39;s simulate an urgent feature request where a developer skips SDD and prompts the AI directly in a new chat:</p>
+      <ol>
+        <li>Click <strong><code>+ New Conversation</code></strong> (or open a new chat thread) in the Antigravity App.</li>
+        <li>Copy and paste <strong>Prompt 9</strong> into the new conversation:</li>
+      </ol>
+      <pre><code>In main.py and static/index.html, add an optional "author" field (defaulting to "Anonymous") to every card and display it on the card UI, and add a "Clear Board" button in the UI backed by a DELETE /api/cards endpoint.</code></pre>
+      <p>Refresh <a href="http://localhost:8000" target="_blank">http://localhost:8000</a> in your browser&mdash;you will see the new <strong>Author</strong> field and the <strong>Clear Board</strong> button working in the UI.</p>
+
+      <h2>4. Run <code>/egm:egm-drift-report</code> to Catch Both Drifts!</h2>
+      <p>Now run the drift detector by copying and pasting <strong>Prompt 10</strong>:</p>
+      <pre><code>/egm:egm-drift-report docs/designs/</code></pre>
+      <p>Open <code>{YYYY-MM-DD}_DRIFT_REPORT.md</code>! EGM compares <code>docs/designs/retropulse.md</code> against <code>main.py</code> and <code>static/index.html</code> and catches <strong>both</strong> divergences red-handed:</p>
+      <ol>
+        <li><strong>Logic / Validation Drift</strong>: <code>main.py</code> enforces a <code>50</code>-character limit on card text instead of the <code>280</code>-character limit specified in <code>docs/designs/retropulse.md</code>.</li>
+        <li><strong>Undocumented Feature &amp; Model Drift</strong>: <code>main.py</code> and <code>static/index.html</code> include an undocumented <code>author</code> field and a <code>DELETE /api/cards</code> (&ldquo;Clear Board&rdquo;) endpoint that contradicts the v1 specification&#39;s <code>Non-Goals</code>.</li>
+      </ol>
+
+      <h2>5. Reconcile the Specification and Code</h2>
+      <p>In EGM, when drift is detected, the human architect decides whether to revert the code or update the spec. Here, we want to <strong>fix the accidental <code>50</code>-character bug</strong> back to <code>280</code>, while <strong>officially adopting the new <code>author</code> and <code>Clear Board</code> features</strong> in the specification.</p>
+      <p>Copy and paste <strong>Prompt 11</strong>:</p>
+      <pre><code>Reconcile the drift between docs/designs/retropulse.md and the codebase:
+1. In main.py (and static/index.html if applicable), restore the maximum card text length back to 280 characters to match the specification.
+2. Update docs/designs/retropulse.md to officially document the optional "author" field (default "Anonymous") and the DELETE /api/cards "Clear Board" feature.
+3. Re-run /egm:egm-drift-report docs/designs/ to verify that zero drift remains.</code></pre>
+      <p>Inspect <code>{YYYY-MM-DD}_DRIFT_REPORT.md</code>&mdash;your specification and codebase are once again 100% synchronized (<code>No drift detected.</code>)!</p>
+    </google-codelab-step>
+
+    <google-codelab-step label="Step 7: (Optional Bonus) Containerize &amp; Deploy to Cloud Run" duration="5">
+      <aside class="warning">
+        <p><strong>Optional Step:</strong> This final step requires a <strong>Google Cloud Project</strong> with billing enabled and the <code>gcloud</code> CLI authenticated on your machine. If you do not have a Google Cloud Project, you can still generate and inspect the production <code>Dockerfile</code> locally!</p>
+      </aside>
+
+      <p>To deploy RetroPulse following <a href="https://cloud.google.com/run/docs/securing/service-identity" target="_blank">Google Cloud Run security best practices</a>, we will:</p>
+      <ul>
+        <li>Package the app using a lightweight <strong>multi-stage Dockerfile</strong> with a non-root <a href="https://cloud.google.com/containers/docs/securing-containers" target="_blank">Google Distroless Python runtime image</a>.</li>
+        <li>Deploy to the <code>southamerica-east1</code> region using a <strong>dedicated, least-privilege Service Account</strong> (never the default Compute Engine service account).</li>
+      </ul>
+
+      <h2>1. Generate the Multi-Stage Dockerfile &amp; Deploy</h2>
+      <p>Copy and paste <strong>Prompt 12</strong> into Antigravity (replacing <code>YOUR_GCP_PROJECT_ID</code> if you are deploying to Google Cloud):</p>
+      <pre><code>Update docs/designs/retropulse.md and the project to include a production multi-stage Dockerfile optimized for size (using python:3.12-slim with uv as the builder stage and gcr.io/distroless/python3-debian12:nonroot as the final runtime stage, listening on PORT=8080).
+
+If I provide a Google Cloud Project ID (YOUR_GCP_PROJECT_ID), give me the exact gcloud commands to:
+1. Create a dedicated least-privilege service account `retropulse-sa`.
+2. Build and deploy the container to Cloud Run in `southamerica-east1` using `--service-account=retropulse-sa@YOUR_GCP_PROJECT_ID.iam.gserviceaccount.com`.</code></pre>
+
+      <h2>Congratulations!</h2>
+      <p>You have built a complete web application from scratch using <strong>Spec-Driven Development (SDD)</strong> in <strong>Antigravity</strong> and the <strong>Elephant-Goldfish Model (EGM)</strong>&mdash;brainstorming with the Elephant, reviewing with stateless Goldfish subagents, building from a single source-of-truth specification, and catching code drift automatically with <code>/egm:egm-drift-report</code>.</p>
+    </google-codelab-step>
+
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+</body>
+</html>
