@@ -35,8 +35,8 @@ You will build **RetroPulse**, a lightweight Sprint Retrospective Board web appl
 
 ### Prerequisites
 * [Google Antigravity App](https://antigravity.google) installed on your machine.
-* Python 3.10+ and [`uv`](https://docs.astral.sh/uv/getting-started/installation/) installed locally.
-* *(Optional for Step 7)* A Google Cloud Project with billing enabled and the [`gcloud` CLI](https://cloud.google.com/sdk/docs/install) installed.
+* Python 3.10+ and [uv](https://docs.astral.sh/uv/getting-started/installation/) installed locally.
+* *(Optional for Step 7)* A Google Cloud Project with billing enabled and the [gcloud CLI](https://cloud.google.com/sdk/docs/install) installed.
 
 ---
 
@@ -322,21 +322,23 @@ Inspect `{YYYY-MM-DD}_DRIFT_REPORT.md`—your specification and codebase are onc
 Duration: 0:05:00
 
 > aside negative
-> **Optional Step:** This final step requires a **Google Cloud Project** with billing enabled and the `gcloud` CLI authenticated on your machine. If you do not have a Google Cloud Project, you can still generate and inspect the production `Dockerfile` locally!
+> **Optional Step:** Deploying live requires a **Google Cloud Project** with billing enabled. If you do not have one, you can still run the first part of this step to update your spec and generate a production `Dockerfile` locally!
 
-To deploy RetroPulse following [Google Cloud Run security best practices](https://cloud.google.com/run/docs/securing/service-identity), we will:
-* Package the app using a lightweight **multi-stage Dockerfile** with a non-root [Google Distroless Python runtime image](https://cloud.google.com/containers/docs/securing-containers).
-* Deploy to the `southamerica-east1` region using a **dedicated, least-privilege Service Account** (never the default Compute Engine service account).
+Before shipping RetroPulse to [Google Cloud Run](https://cloud.google.com/run/docs/quickstarts/build-and-deploy/deploy-python-fastapi-service), we will apply three [Cloud Run development and security best practices](https://cloud.google.com/run/docs/tips/general):
+* **Update the spec first**: Document containerization in `docs/designs/retropulse.md` before creating `Dockerfile` so your spec stays the Single Source of Truth.
+* **Keep the container small and non-root**: Use a **multi-stage Dockerfile** that installs dependencies in a builder stage and copies only the app into a minimal, non-root [Google Distroless runtime image](https://github.com/GoogleContainerTools/distroless) (with no shell or package manager inside the running container).
+* **Use a dedicated Service Account**: Run the service under its own minimal identity instead of the overly broad default Compute Engine service account.
 
-### 1. Generate the Multi-Stage Dockerfile & Deploy
-Copy and paste **Prompt 12** into Antigravity (replacing `YOUR_GCP_PROJECT_ID` if you are deploying to Google Cloud):
+> aside positive
+> **Tip — Cloud Tools & MCP in Antigravity:** Enable the built-in [Google Cloud Developer](https://antigravity.google/docs/build-with-google) plugin bundle (**Settings > Customizations > Build with Google Plugins**) to give your agent official Cloud Run, IAM, and container skills—or connect the [Cloud Run MCP server](https://cloud.google.com/run/docs/use-cloud-run-mcp) to deploy and inspect services through MCP tools.
+
+### 1. Containerize & Deploy with Antigravity
+Copy and paste **Prompt 12** into Antigravity (replace `YOUR_GCP_PROJECT_ID` and `YOUR_REGION`—for example, `us-central1` or `southamerica-east1`—if you are deploying live):
 
 ```text
-Update docs/designs/retropulse.md and the project to include a production multi-stage Dockerfile optimized for size (using python:3.11-slim-bookworm with uv as the builder stage and gcr.io/distroless/python3-debian12:nonroot as the final runtime stage, listening on PORT=8080).
+Update docs/designs/retropulse.md first, and then generate a lightweight, production multi-stage Dockerfile (using uv in the builder stage and a non-root Google Distroless Python runtime image listening on PORT=8080).
 
-If I provide a Google Cloud Project ID (YOUR_GCP_PROJECT_ID), give me the exact gcloud commands to:
-1. Create a dedicated least-privilege service account `retropulse-sa`.
-2. Build and deploy the container to Cloud Run in `southamerica-east1` using `--service-account=retropulse-sa@YOUR_GCP_PROJECT_ID.iam.gserviceaccount.com`.
+If I am deploying live to Google Cloud Run (Project ID: YOUR_GCP_PROJECT_ID, Region: YOUR_REGION), create a dedicated least-privilege service account for RetroPulse and deploy the service step by step.
 ```
 
 ### Congratulations!

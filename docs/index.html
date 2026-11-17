@@ -112,8 +112,8 @@
       <h2>Prerequisites</h2>
       <ul>
         <li><a href="https://antigravity.google" target="_blank">Google Antigravity App</a> installed on your machine.</li>
-        <li>Python 3.10+ and <a href="https://docs.astral.sh/uv/getting-started/installation/" target="_blank"><code>uv</code></a> installed locally.</li>
-        <li><em>(Optional for Step 7)</em> A Google Cloud Project with billing enabled and the <a href="https://cloud.google.com/sdk/docs/install" target="_blank"><code>gcloud</code> CLI</a> installed.</li>
+        <li>Python 3.10+ and <a href="https://docs.astral.sh/uv/getting-started/installation/" target="_blank">uv</a> installed locally.</li>
+        <li><em>(Optional for Step 7)</em> A Google Cloud Project with billing enabled and the <a href="https://cloud.google.com/sdk/docs/install" target="_blank">gcloud CLI</a> installed.</li>
       </ul>
     </google-codelab-step>
 
@@ -344,22 +344,25 @@ Please record these decisions in `concepts_brief.md` and finalize the brief.</co
 
     <google-codelab-step label="Step 7: (Optional Bonus) Containerize &amp; Deploy to Cloud Run" duration="5">
       <aside class="warning">
-        <p><strong>Optional Step:</strong> This final step requires a <strong>Google Cloud Project</strong> with billing enabled and the <code>gcloud</code> CLI authenticated on your machine. If you do not have a Google Cloud Project, you can still generate and inspect the production <code>Dockerfile</code> locally!</p>
+        <p><strong>Optional Step:</strong> Deploying live requires a <strong>Google Cloud Project</strong> with billing enabled. If you do not have one, you can still run the first part of this step to update your spec and generate a production <code>Dockerfile</code> locally!</p>
       </aside>
 
-      <p>To deploy RetroPulse following <a href="https://cloud.google.com/run/docs/securing/service-identity" target="_blank">Google Cloud Run security best practices</a>, we will:</p>
+      <p>Before shipping RetroPulse to <a href="https://cloud.google.com/run/docs/quickstarts/build-and-deploy/deploy-python-fastapi-service" target="_blank">Google Cloud Run</a>, we will apply three <a href="https://cloud.google.com/run/docs/tips/general" target="_blank">Cloud Run development and security best practices</a>:</p>
       <ul>
-        <li>Package the app using a lightweight <strong>multi-stage Dockerfile</strong> with a non-root <a href="https://cloud.google.com/containers/docs/securing-containers" target="_blank">Google Distroless Python runtime image</a>.</li>
-        <li>Deploy to the <code>southamerica-east1</code> region using a <strong>dedicated, least-privilege Service Account</strong> (never the default Compute Engine service account).</li>
+        <li><strong>Update the spec first</strong>: Document containerization in <code>docs/designs/retropulse.md</code> before creating <code>Dockerfile</code> so your spec stays the Single Source of Truth.</li>
+        <li><strong>Keep the container small and non-root</strong>: Use a <strong>multi-stage Dockerfile</strong> that installs dependencies in a builder stage and copies only the app into a minimal, non-root <a href="https://github.com/GoogleContainerTools/distroless" target="_blank">Google Distroless runtime image</a> (with no shell or package manager inside the running container).</li>
+        <li><strong>Use a dedicated Service Account</strong>: Run the service under its own minimal identity instead of the overly broad default Compute Engine service account.</li>
       </ul>
 
-      <h2>1. Generate the Multi-Stage Dockerfile &amp; Deploy</h2>
-      <p>Copy and paste <strong>Prompt 12</strong> into Antigravity (replacing <code>YOUR_GCP_PROJECT_ID</code> if you are deploying to Google Cloud):</p>
-      <pre><code>Update docs/designs/retropulse.md and the project to include a production multi-stage Dockerfile optimized for size (using python:3.11-slim-bookworm with uv as the builder stage and gcr.io/distroless/python3-debian12:nonroot as the final runtime stage, listening on PORT=8080).
+      <aside class="special">
+        <p><strong>Tip &mdash; Cloud Tools &amp; MCP in Antigravity:</strong> Enable the built-in <a href="https://antigravity.google/docs/build-with-google" target="_blank">Google Cloud Developer</a> plugin bundle (<strong>Settings &gt; Customizations &gt; Build with Google Plugins</strong>) to give your agent official Cloud Run, IAM, and container skills&mdash;or connect the <a href="https://cloud.google.com/run/docs/use-cloud-run-mcp" target="_blank">Cloud Run MCP server</a> to deploy and inspect services through MCP tools.</p>
+      </aside>
 
-If I provide a Google Cloud Project ID (YOUR_GCP_PROJECT_ID), give me the exact gcloud commands to:
-1. Create a dedicated least-privilege service account `retropulse-sa`.
-2. Build and deploy the container to Cloud Run in `southamerica-east1` using `--service-account=retropulse-sa@YOUR_GCP_PROJECT_ID.iam.gserviceaccount.com`.</code></pre>
+      <h2>1. Containerize &amp; Deploy with Antigravity</h2>
+      <p>Copy and paste <strong>Prompt 12</strong> into Antigravity (replace <code>YOUR_GCP_PROJECT_ID</code> and <code>YOUR_REGION</code>&mdash;for example, <code>us-central1</code> or <code>southamerica-east1</code>&mdash;if you are deploying live):</p>
+      <pre><code>Update docs/designs/retropulse.md first, and then generate a lightweight, production multi-stage Dockerfile (using uv in the builder stage and a non-root Google Distroless Python runtime image listening on PORT=8080).
+
+If I am deploying live to Google Cloud Run (Project ID: YOUR_GCP_PROJECT_ID, Region: YOUR_REGION), create a dedicated least-privilege service account for RetroPulse and deploy the service step by step.</code></pre>
 
       <h2>Congratulations!</h2>
       <p>You have built a complete web application from scratch using <strong>Spec-Driven Development (SDD)</strong> in <strong>Antigravity</strong> and the <strong>Elephant-Goldfish Model (EGM)</strong>&mdash;brainstorming with the Elephant, reviewing with stateless Goldfish subagents, building from a single source-of-truth specification, and catching code drift automatically with <code>/egm:egm-drift-report</code>.</p>
