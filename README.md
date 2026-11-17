@@ -8,7 +8,6 @@ Hands-on workshop and presentation materials for **Spec-Driven Development (SDD)
 
 Follow the interactive, step-by-step Google Codelab in your browser:
 
-* **Cloud Run Codelab**: [https://sdd-egm-codelab-1010474272420.southamerica-east1.run.app](https://sdd-egm-codelab-1010474272420.southamerica-east1.run.app)
 * **GitHub Pages Codelab**: [https://alvardev.github.io/sdlc-egm/](https://alvardev.github.io/sdlc-egm/)
 
 Try the live **RetroPulse** application on Cloud Run (`southamerica-east1`):
@@ -23,9 +22,9 @@ Try the live **RetroPulse** application on Cloud Run (`southamerica-east1`):
 ```text
 sdlc-egm/
 ├── README.md                  # Repository overview & live Codelab links
-├── docs/                      # Compiled interactive HTML Codelab (GitHub Pages & Cloud Run)
+├── docs/                      # Compiled interactive HTML Codelab (GitHub Pages)
 │   └── index.html
-├── codelab/                   # Codelab Markdown source & Cloud Run static Go server
+├── codelab/                   # Codelab Markdown source & local preview Go server
 │   ├── codelab.md             # Google Codelabs (claat) Markdown source
 │   ├── Dockerfile             # Multi-stage Google Distroless Dockerfile
 │   ├── go.mod                 # Go module definition
