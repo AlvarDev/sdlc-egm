@@ -1,0 +1,812 @@
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Deploying CI/CD Pipelines with Antigravity &amp; the Antigravity SDK</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+    .code-block-wrapper {
+      position: relative;
+      margin: 14px 0;
+    }
+    google-codelab-step .code-block-wrapper pre {
+      margin: 0;
+      padding: 14px 76px 14px 14px;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+    .code-block-actions {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      display: flex;
+      gap: 2px;
+      z-index: 2;
+    }
+    .code-action-btn {
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: #bdc1c6;
+      cursor: pointer;
+      padding: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.15s, color 0.15s;
+    }
+    .code-action-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+    }
+    .code-action-btn .material-icons {
+      font-size: 18px;
+    }
+    .code-action-btn.copied {
+      color: #81c995;
+    }
+    body.code-light google-codelab-step pre {
+      background-color: #f1f3f4;
+      color: #202124;
+      border: 1px solid #dadce0;
+    }
+    body.code-light google-codelab-step pre .pln,
+    body.code-light google-codelab-step pre .pun { color: #202124; }
+    body.code-light google-codelab-step pre .str,
+    body.code-light google-codelab-step pre .atv { color: #188038; }
+    body.code-light google-codelab-step pre .kwd { color: #b80672; }
+    body.code-light google-codelab-step pre .com { color: #5f6368; }
+    body.code-light google-codelab-step pre .typ,
+    body.code-light google-codelab-step pre .tag { color: #0b57d0; }
+    body.code-light google-codelab-step pre .lit,
+    body.code-light google-codelab-step pre .dec { color: #1967d2; }
+    body.code-light google-codelab-step pre .atn { color: #b06000; }
+    body.code-light .code-action-btn {
+      color: #5f6368;
+    }
+    body.code-light .code-action-btn:hover {
+      background: rgba(32, 33, 36, 0.08);
+      color: #202124;
+    }
+    body.code-light .code-action-btn.copied {
+      color: #1e8e3e;
+    }
+    details.checkpoint {
+      margin: 16px 0;
+      border: 1px solid #dadce0;
+      border-radius: 6px;
+      background: #f8f9fa;
+      padding: 10px 14px;
+    }
+    details.checkpoint summary {
+      cursor: pointer;
+      font-weight: 500;
+      color: #1967d2;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab id="gitlab-ci-antigravity-sdk"
+                  title="Deploying CI/CD Pipelines with Antigravity &amp; the Antigravity SDK"
+                  environment="web">
+
+    <google-codelab-step label="Overview" duration="3">
+      <google-codelab-about codelab-title="Deploying CI/CD Pipelines with Antigravity &amp; the Antigravity SDK"
+                            last-updated="2026-11-18T12:00:00Z"
+                            authors="AlvarDev">
+      </google-codelab-about>
+
+      <p>Welcome to the hands-on workshop on building and deploying <strong>AI-Gated CI/CD Pipelines</strong> in <strong>GitLab CI/CD</strong> using <strong>Google Antigravity</strong>, the <a href="https://github.com/google/elephant-goldfish-model" target="_blank">Elephant-Goldfish Model (EGM)</a>, and the <a href="https://antigravity.google/docs/sdk/overview" target="_blank">Google Antigravity Python SDK</a>.</p>
+      <p class="image-container"><img alt="Antigravity GitLab CI/CD Pipeline Architecture" src="../img/gitlab-ci-architecture.svg"></p>
+      <p>In the <a href="../" target="_blank">Spec-Driven Development with Antigravity</a> workshop, we used <a href="https://github.com/google/elephant-goldfish-model" target="_blank">EGM</a> on our workstation to write specifications and detect spec-vs-code drift locally. In this workshop, you will bring <strong><code>egm-drift-report</code> and stateless Goldfish subagents directly inside GitLab CI/CD</strong> using the <strong>Antigravity Python SDK</strong> on every Merge Request:</p>
+      <ul>
+        <li><strong>Stage 1 &mdash; Deterministic Tests First (<code>pytest</code>)</strong>: Fast, cheap unit tests run first so broken code fails in seconds without spending AI tokens.</li>
+        <li><strong>Stage 2 &mdash; Autonomous Antigravity SDK + EGM Gate (<code>ci/ai_gate.py</code>)</strong>: A read-only <strong>Elephant</strong> coordinator loads the official <a href="https://github.com/google/elephant-goldfish-model/blob/main/skills/egm-drift-report/SKILL.md" target="_blank"><code>egm-drift-report</code></a> skill and delegates in parallel to two stateless Goldfish&mdash;<a href="https://github.com/google/elephant-goldfish-model/blob/main/agents/codebase_details.md" target="_blank"><code>egm_codebase_details</code></a> (auditing <code>docs/designs/retropulse.md</code>) and <code>security_auditor</code> (auditing <code>Dockerfile</code> and source files)&mdash;returning a typed Pydantic pass/fail verdict and <code>DRIFT_REPORT.md</code>.</li>
+        <li><strong>Stage 3 &mdash; Keyless Cloud Run Deployment <em>(Optional Bonus)</em></strong>: Once approved on <code>main</code>, ship to Google Cloud Run using keyless OIDC Workload Identity Federation.</li>
+      </ul>
+
+      <h2 class="checklist">What You Will Learn</h2>
+      <ul class="checklist">
+        <li>How to enable the built-in <strong>Google Antigravity SDK</strong> skill bundle inside Antigravity App.</li>
+        <li>How to load upstream EGM skills (<a href="https://antigravity.google/docs/sdk/tools#agent-skills" target="_blank">Agent Skills</a>) and Goldfish personas (<a href="https://antigravity.google/docs/sdk/subagents" target="_blank">Subagents</a>) into a read-only Python CI gate with <a href="https://antigravity.google/docs/sdk/policies" target="_blank">declarative safety policies</a> and <a href="https://antigravity.google/docs/sdk/structured-output" target="_blank">Pydantic structured output</a>.</li>
+        <li>How to author and configure a multi-stage <code>.gitlab-ci.yml</code> pipeline with masked variables, <code>uv</code> caching, and <code>DRIFT_REPORT.md</code> job artifacts.</li>
+        <li>How to catch specification drift and container security issues on a GitLab Merge Request&mdash;even when unit tests pass 100%.</li>
+      </ul>
+
+      <h2>Prerequisites</h2>
+      <ul>
+        <li><a href="https://antigravity.google" target="_blank">Google Antigravity App</a> installed on your machine.</li>
+        <li>Python 3.10+, <code>git</code>, and <a href="https://docs.astral.sh/uv/getting-started/installation/" target="_blank">uv</a> installed locally.</li>
+        <li>A <strong>GitLab</strong> account with CI/CD runners available (corporate GitLab or verified GitLab.com account).</li>
+        <li>A <a href="https://aistudio.google.com/apikey" target="_blank">Gemini API Key</a> from Google AI Studio with active Free Tier quota or a positive <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank">Prepay credit balance</a> <em>(or a Google Cloud project with Vertex AI / Gemini Enterprise enabled)</em>.</li>
+      </ul>
+    </google-codelab-step>
+
+    <google-codelab-step label="Step 1: Import Starter Repo into GitLab &amp; Set Up Antigravity" duration="7">
+      <p>To spend 100% of our time on <strong>Antigravity SDK</strong>, <strong>EGM</strong>, and <strong>GitLab CI/CD</strong>, you will start from a ready-made starter project of <strong>RetroPulse</strong> (a lightweight FastAPI Sprint Retrospective Board with unit tests, a non-root multi-stage <code>Dockerfile</code>, and an approved specification in <code>docs/designs/retropulse.md</code>).</p>
+
+      <h2>1. Import the Starter Repository into GitLab</h2>
+      <ol>
+        <li>Sign in to <strong>GitLab</strong>, click the <strong>+</strong> icon in the <strong>top-right navigation bar</strong>, and select <strong>New project/repository</strong> (or click <strong>Projects &gt; New project</strong> in the left sidebar).</li>
+        <li>Select <strong>Import project</strong> &gt; <strong>Repository by URL</strong>.</li>
+        <li>Under <strong>Git repository URL</strong>, paste the starter repository URL provided by your instructor (for example, <code>https://github.com/AlvarDev/retropulse-starter.git</code>).</li>
+        <li>Name the project <code>retropulse-pipeline</code>, keep visibility <strong>Private</strong> (or Internal), and click <strong>Create project</strong>.</li>
+      </ol>
+
+      <details class="checkpoint">
+        <summary>Fallback (Restricted Corporate GitLab): Click here if &ldquo;Repository by URL&rdquo; import is blocked</summary>
+        <p>Some self-managed corporate GitLab servers firewall external imports from GitHub even when your laptop can reach both. If URL import is disabled or fails:</p>
+        <ol>
+          <li>In GitLab, select <strong>Create blank project</strong>, name it <code>retropulse-pipeline</code>, <strong>uncheck &ldquo;Initialize repository with a README&rdquo;</strong>, and click <strong>Create project</strong>.</li>
+          <li>Clone the starter repo from GitHub onto your laptop, point <code>origin</code> to your new GitLab project URL, and push:</li>
+        </ol>
+        <pre><code data-lang="sh">git clone https://github.com/AlvarDev/retropulse-starter.git retropulse-pipeline
+cd retropulse-pipeline
+git remote set-url origin &lt;YOUR_GITLAB_REPO_URL&gt;
+git push -u origin main</code></pre>
+        <p>Since <code>retropulse-pipeline</code> is now already on your machine, skip <code>git clone</code> in Section 2 below and open the folder directly in <strong>Antigravity App</strong>!</p>
+      </details>
+
+      <h2>2. Clone &amp; Open in Antigravity App</h2>
+      <p>Clone your new GitLab project to your machine and open it in <strong>Antigravity App</strong>:</p>
+      <pre><code data-lang="sh">git clone &lt;YOUR_GITLAB_REPO_URL&gt; retropulse-pipeline
+cd retropulse-pipeline</code></pre>
+      <p>In <strong>Antigravity App</strong>, click <strong>Create Project</strong> (or <strong>Open Folder</strong>), add your <code>retropulse-pipeline</code> folder, and click <strong>Next</strong>.</p>
+
+      <h2>3. Enable the Google Antigravity SDK Bundle</h2>
+      <p>Antigravity ships with an official curated bundle that teaches your coding agent the exact classes, policies, and patterns of the Python SDK:</p>
+      <ol>
+        <li>In <strong>Antigravity App</strong>, click <strong>Customizations</strong> in the left sidebar.</li>
+        <li>Under <strong>Build with Google</strong>, find <strong>Google Antigravity SDK</strong> and click <strong>+</strong> (<strong>Add</strong>).</li>
+      </ol>
+      <p class="image-container"><img alt="Add Google Antigravity SDK in Customizations" src="../img/step1-add-antigravity-sdk.png"></p>
+
+      <h2>4. Install Dependencies &amp; Verify Unit Tests</h2>
+      <p>The <a href="https://pypi.org/project/google-antigravity/" target="_blank">google-antigravity</a> package on PyPI bundles the compiled Antigravity runtime binary directly inside its Python wheel&mdash;meaning both your laptop and your GitLab Linux runner get the full runtime from a single <code>uv</code> command with no extra CLI installers.</p>
+      <p>Ask Antigravity (or run in your terminal) to add <code>google-antigravity</code> as a development/CI dependency and run the unit test suite:</p>
+      <pre><code data-lang="sh">uv add --dev google-antigravity
+uv run pytest -v</code></pre>
+      <p>You should see <strong>4 passed</strong>. Keeping <code>google-antigravity</code> in <code>dev</code> dependencies ensures our production <code>Dockerfile</code> (which runs <code>uv sync --no-dev</code>) stays tiny and contains only FastAPI and Uvicorn!</p>
+    </google-codelab-step>
+
+    <google-codelab-step label="Step 2: Build the Autonomous EGM Gate with Antigravity SDK" duration="18">
+      <p>Now let&rsquo;s build <code>ci/ai_gate.py</code>&mdash;an autonomous release gate powered by the <a href="https://antigravity.google/docs/sdk/overview" target="_blank">Google Antigravity Python SDK</a> and the official <a href="https://github.com/google/elephant-goldfish-model" target="_blank">Elephant-Goldfish Model (EGM)</a>.</p>
+
+      <h2>Why Combine EGM + the Antigravity SDK in CI/CD?</h2>
+      <p>Raw <code>egm-drift-report</code> writes a helpful Markdown report, but on its own it does not return a CI exit code or inspect container security. Wrapping EGM inside <code>google-antigravity</code> gives your GitLab pipeline three production-grade superpowers:</p>
+      <ol>
+        <li><strong>Strict Read-Only Execution</strong> (<a href="https://antigravity.google/docs/sdk/policies" target="_blank">Policies &amp; Capabilities</a>): We strip write/shell tools from <code>CapabilitiesConfig</code> <em>and</em> enforce <code>policy.deny(...)</code> rules so the CI agent can inspect files and diffs without ever modifying code or running shell commands.</li>
+        <li><strong>Real EGM Skill + Parallel Goldfish</strong> (<a href="https://antigravity.google/docs/sdk/tools#agent-skills" target="_blank">Agent Skills</a> &amp; <a href="https://antigravity.google/docs/sdk/subagents" target="_blank">Subagents</a>): Our <strong>Elephant</strong> coordinator loads upstream <code>skills/egm-drift-report/SKILL.md</code> via <code>types.InlineSkill</code> and delegates in parallel to <code>egm_codebase_details</code> (loaded directly from <code>agents/codebase_details.md</code>) and <code>security_auditor</code> (auditing <code>Dockerfile</code> and secrets).</li>
+        <li><strong>Deterministic Exit Codes via Pydantic</strong> (<a href="https://antigravity.google/docs/sdk/structured-output" target="_blank">Structured Output</a>): Enforcing <code>response_schema=GateVerdict</code> guarantees a typed <code>approved: bool</code> field so Python writes <code>DRIFT_REPORT.md</code> and exits <code>0</code> (pass) or <code>1</code> (block Merge Request) reliably.</li>
+      </ol>
+
+      <h2>1. Generate <code>ci/ai_gate.py</code> from Antigravity App</h2>
+      <p>Copy and paste <strong>Prompt 1</strong> into the Antigravity App chat:</p>
+      <pre><code>Use the Google Antigravity Python SDK (`google-antigravity`) and the upstream Elephant-Goldfish Model (`https://github.com/google/elephant-goldfish-model.git`) to create `ci/ai_gate.py` as an autonomous CI/CD drift and security gate:
+
+1. Define Pydantic models `Finding` (`category`: Literal["SPEC_DRIFT", "SECURITY"], `severity`: Literal["HIGH", "MEDIUM", "LOW"], `file`, `description`, `remediation`) and `GateVerdict` (`approved`: bool, `risk_level`: Literal["LOW", "MEDIUM", "HIGH"], `summary`: str, `findings`: list[Finding]).
+2. Write `ensure_egm_repo() -&gt; Path` that uses `EGM_REPO_PATH` if set or shallow-clones `https://github.com/google/elephant-goldfish-model.git` (`--depth 1`) into a temp cache directory, plus `_strip_frontmatter(md)` to strip YAML frontmatter.
+3. Write a read-only Python tool `get_git_diff() -&gt; str` that checks GitLab Merge Request diffs (`CI_MERGE_REQUEST_DIFF_BASE_SHA` or `CI_MERGE_REQUEST_TARGET_BRANCH_NAME`) and falls back to `git diff HEAD`.
+4. Load `skills/egm-drift-report/SKILL.md` into `types.InlineSkill(name="egm-drift-report", ...)` and configure two read-only Goldfish `types.SubagentConfig` subagents (`VIEW_FILE`, `LIST_DIR`, `SEARCH_DIR`, `FIND_FILE`, `skills_config=types.SubagentNoneSkillsConfig()`, plus `tools=[get_git_diff]`):
+   - `egm_codebase_details`: loads `agents/codebase_details.md` (`Mode: REVIEW`) to audit `docs/designs/retropulse.md` against `main.py`, `static/index.html`, and the diff.
+   - `security_auditor`: audits `Dockerfile`, `main.py`, and the diff for running as `root` instead of `nonroot`, hardcoded secrets/tokens, or exposed environment variables.
+5. Configure `LocalAgentConfig` with `inline_skills=[egm_drift_skill]`, `enable_subagents=True`, read-only `enabled_tools` (including `INVOKE_SUBAGENT` and `FINISH`), `policies=[policy.deny("create_file"), policy.deny("edit_file"), policy.deny("run_command"), policy.allow("*")]`, and `response_schema=GateVerdict` (instructing the Elephant coordinator to set `approved=False` on any HIGH/MEDIUM finding, skip file-writing tools, and invoke the `finish` tool with `GateVerdict` rather than ending with Markdown prose).
+6. Stream live `response.tool_calls` progress, support both `GEMINI_API_KEY` and Vertex AI (`GOOGLE_GENAI_USE_VERTEXAI=true`), write `DRIFT_REPORT.md` and `verdict.json` to the repo root, print the report, and exit `0` if `verdict.approved` is True else `1`.</code></pre>
+
+      <details class="checkpoint">
+        <summary>Checkpoint: View verified reference code for <code>ci/ai_gate.py</code></summary>
+        <p>If your generated script differs or hits an import question, compare it against this verified implementation:</p>
+        <pre><code data-lang="py">"""Autonomous CI/CD Quality &amp; Security Gate powered by Antigravity SDK + EGM."""
+
+from __future__ import annotations
+
+import asyncio
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+import tempfile
+import time
+from typing import Any, Literal
+
+from google.antigravity import Agent, BuiltinTools, CapabilitiesConfig, LocalAgentConfig, types
+from google.antigravity.hooks import policy
+from pydantic import BaseModel, Field
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+EGM_GIT_URL = "https://github.com/google/elephant-goldfish-model.git"
+_FRONTMATTER_RE = re.compile(
+    r"\A---\s*\r?\n(?:.*?\r?\n)?---\s*(?:\r?\n|$)",
+    re.DOTALL,
+)
+_JSON_FENCE_RE = re.compile(r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL)
+
+
+class Finding(BaseModel):
+    category: Literal["SPEC_DRIFT", "SECURITY"]
+    severity: Literal["HIGH", "MEDIUM", "LOW"]
+    file: str = Field(description="Relative file path where the issue was found")
+    description: str = Field(description="What violates the spec or security policy")
+    remediation: str = Field(description="Concrete fix required to pass the gate")
+
+
+class GateVerdict(BaseModel):
+    approved: bool = Field(
+        description="True ONLY when zero HIGH/MEDIUM spec-drift or security findings exist"
+    )
+    risk_level: Literal["LOW", "MEDIUM", "HIGH"]
+    summary: str
+    findings: list[Finding] = Field(default_factory=list)
+
+
+def _strip_frontmatter(markdown_text: str) -&gt; str:
+    """Strips optional YAML frontmatter from an EGM skill or Goldfish file."""
+    return _FRONTMATTER_RE.sub("", markdown_text, count=1).lstrip("\r\n")
+
+
+def ensure_egm_repo() -&gt; Path:
+    """Locates or shallow-clones google/elephant-goldfish-model for CI/local runs."""
+    env_path = os.environ.get("EGM_REPO_PATH", "").strip()
+    if env_path:
+        egm_dir = Path(env_path).expanduser().resolve()
+        if (egm_dir / "skills" / "egm-drift-report" / "SKILL.md").exists():
+            return egm_dir
+
+    cache_dir = Path(tempfile.gettempdir()) / "elephant-goldfish-model"
+    if not (cache_dir / "skills" / "egm-drift-report" / "SKILL.md").exists():
+        subprocess.run(
+            ["git", "clone", "--depth", "1", "--quiet", EGM_GIT_URL, str(cache_dir)],
+            check=True,
+        )
+    return cache_dir
+
+
+def get_git_diff() -&gt; str:
+    """Returns the git diff for the current Merge Request or working tree."""
+    base_sha = os.environ.get("CI_MERGE_REQUEST_DIFF_BASE_SHA", "").strip()
+    target_branch = os.environ.get("CI_MERGE_REQUEST_TARGET_BRANCH_NAME", "").strip()
+
+    candidates: list[list[str]] = []
+    if base_sha:
+        candidates.append(["git", "diff", f"{base_sha}...HEAD"])
+    if target_branch:
+        candidates.append(["git", "diff", f"origin/{target_branch}...HEAD"])
+        candidates.append(["git", "diff", f"{target_branch}...HEAD"])
+    candidates.append(["git", "diff", "HEAD"])
+
+    for cmd in candidates:
+        res = subprocess.run(
+            cmd, cwd=REPO_ROOT, capture_output=True, text=True, check=False
+        )
+        if res.returncode == 0 and res.stdout.strip():
+            return res.stdout[:12000]
+
+    return "No git diff detected; audit the full repository baseline."
+
+
+READ_ONLY_SUBAGENT_TOOLS = [
+    BuiltinTools.VIEW_FILE,
+    BuiltinTools.LIST_DIR,
+    BuiltinTools.SEARCH_DIR,
+    BuiltinTools.FIND_FILE,
+]
+
+
+def build_config() -&gt; LocalAgentConfig:
+    egm_root = ensure_egm_repo()
+    drift_skill_body = _strip_frontmatter(
+        (egm_root / "skills" / "egm-drift-report" / "SKILL.md").read_text(encoding="utf-8")
+    )
+    goldfish_body = _strip_frontmatter(
+        (egm_root / "agents" / "codebase_details.md").read_text(encoding="utf-8")
+    )
+
+    egm_drift_skill = types.InlineSkill(
+        name="egm-drift-report",
+        description=(
+            "Official EGM drift detection workflow comparing design specs in "
+            "docs/designs/ against the live codebase."
+        ),
+        content=drift_skill_body,
+    )
+
+    egm_codebase_details = types.SubagentConfig(
+        name="egm_codebase_details",
+        description=(
+            "Official EGM Codebase Details Goldfish auditing docs/designs/retropulse.md "
+            "against main.py and static/index.html."
+        ),
+        system_instructions=(
+            f"{goldfish_body}\n\n"
+            "CI Execution Context: Run in `Mode: REVIEW` against `docs/designs/retropulse.md`, "
+            "`main.py`, `static/index.html`, and call `get_git_diff`. Flag any undocumented "
+            "API endpoints, altered Pydantic validation constraints, or violations of Non-Goals."
+        ),
+        capabilities=types.SubagentCapabilities(enabled_tools=READ_ONLY_SUBAGENT_TOOLS),
+        skills_config=types.SubagentNoneSkillsConfig(),
+        tools=[get_git_diff],
+    )
+
+    security_auditor = types.SubagentConfig(
+        name="security_auditor",
+        description="Stateless Security Goldfish auditing Dockerfile and Python code.",
+        system_instructions=(
+            "You are a stateless Cloud Security Goldfish running in CI. "
+            "Read Dockerfile, main.py, and call get_git_diff. Flag HIGH severity "
+            "issues if the runtime container runs as root instead of nonroot, skips "
+            "multi-stage isolation, hardcodes secrets/tokens/keys, or exposes "
+            "environment variables."
+        ),
+        capabilities=types.SubagentCapabilities(enabled_tools=READ_ONLY_SUBAGENT_TOOLS),
+        skills_config=types.SubagentNoneSkillsConfig(),
+        tools=[get_git_diff],
+    )
+
+    return LocalAgentConfig(
+        model=os.environ.get("ANTIGRAVITY_MODEL") or None,
+        workspaces=[str(REPO_ROOT)],
+        inline_skills=[egm_drift_skill],
+        system_instructions=(
+            "You are the Elephant CI/CD Release Gate Coordinator. "
+            "Use the analysis steps from the `egm-drift-report` skill on `docs/designs/` "
+            "(do NOT attempt to call file-writing tools—CI enforces read-only policies "
+            "and Python writes `DRIFT_REPORT.md` from your structured output). "
+            "Invoke BOTH `egm_codebase_details` and `security_auditor` Goldfish in parallel, "
+            "synthesize their findings without invention, and set approved=False if ANY "
+            "HIGH or MEDIUM finding exists. IMPORTANT: Override Step 4 of `egm-drift-report`—"
+            "do NOT end with plain Markdown text; you MUST invoke the `finish` tool to submit "
+            "the final `GateVerdict` structured payload."
+        ),
+        capabilities=CapabilitiesConfig(
+            enable_subagents=True,
+            enabled_tools=[
+                BuiltinTools.VIEW_FILE,
+                BuiltinTools.LIST_DIR,
+                BuiltinTools.SEARCH_DIR,
+                BuiltinTools.FIND_FILE,
+                BuiltinTools.INVOKE_SUBAGENT,
+                BuiltinTools.FINISH,
+            ],
+            allowed_subagents=["egm_codebase_details", "security_auditor"],
+        ),
+        policies=[
+            policy.deny("create_file"),
+            policy.deny("edit_file"),
+            policy.deny("run_command"),
+            policy.allow("*"),
+        ],
+        subagents=[egm_codebase_details, security_auditor],
+        response_schema=GateVerdict,
+    )
+
+
+def _extract_verdict_payload(agent: Agent, text_fallback: str) -&gt; Any | None:
+    for step in reversed(agent.conversation.history):
+        if (
+            step.depth == 0
+            and step.type == types.StepType.FINISH
+            and step.structured_output is not None
+        ):
+            return step.structured_output
+
+    cleaned = text_fallback.strip()
+    if not cleaned:
+        return None
+    if match := _JSON_FENCE_RE.search(cleaned):
+        cleaned = match.group(1)
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError:
+        return None
+
+
+def write_reports(verdict: GateVerdict) -&gt; None:
+    status_badge = "PASSED" if verdict.approved else "BLOCKED"
+    drift_findings = [f for f in verdict.findings if f.category == "SPEC_DRIFT"]
+    sec_findings = [f for f in verdict.findings if f.category == "SECURITY"]
+
+    lines = [
+        f"# Antigravity + EGM CI Gate: {status_badge}",
+        "",
+        f"- **Approved**: `{verdict.approved}`",
+        f"- **Risk Level**: `{verdict.risk_level}`",
+        f"- **Summary**: {verdict.summary}",
+        "",
+        "## docs/designs/retropulse.md (EGM Drift Report)",
+        "",
+    ]
+    if not drift_findings:
+        lines.append("No drift detected")
+    else:
+        for f in drift_findings:
+            lines.append(
+                f"- **[{f.severity}] `{f.file}`**: {f.description} *(Fix: {f.remediation})*"
+            )
+
+    lines.extend(["", "## Security Audit", ""])
+    if not sec_findings:
+        lines.append("No security violations detected")
+    else:
+        for f in sec_findings:
+            lines.append(
+                f"- **[{f.severity}] `{f.file}`**: {f.description} *(Fix: {f.remediation})*"
+            )
+
+    report_md = "\n".join(lines) + "\n"
+    (REPO_ROOT / "DRIFT_REPORT.md").write_text(report_md, encoding="utf-8")
+    (REPO_ROOT / "verdict.json").write_text(
+        verdict.model_dump_json(indent=2) + "\n", encoding="utf-8"
+    )
+    print(f"\n{report_md}")
+
+
+async def run_gate() -&gt; int:
+    has_api_key = bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"))
+    has_vertex = os.environ.get("GOOGLE_GENAI_USE_VERTEXAI", "").lower() in ("true", "1")
+    if not has_api_key and not has_vertex:
+        print(
+            "ERROR: Set GEMINI_API_KEY (workshop) or GOOGLE_GENAI_USE_VERTEXAI=true "
+            "(Vertex AI / Gemini Enterprise) before running ci/ai_gate.py.",
+            file=sys.stderr,
+        )
+        return 2
+
+    t0 = time.monotonic()
+    config = build_config()
+    print(f"[{time.monotonic() - t0:5.1f}s] Starting Antigravity + EGM CI Gate...", flush=True)
+
+    async with Agent(config) as agent:
+        response = await agent.chat(
+            "Run the EGM drift &amp; security release audit on `docs/designs/` now. "
+            "Delegate in parallel to `egm_codebase_details` and `security_auditor`, "
+            "synthesize their findings, and invoke the `finish` tool with GateVerdict."
+        )
+        async for tc in response.tool_calls:
+            print(f"[{time.monotonic() - t0:5.1f}s] Tool call -&gt; {tc.name}", flush=True)
+
+        raw = await response.structured_output()
+        last_text = ""
+        if raw is None:
+            last_text = await response.text()
+            raw = _extract_verdict_payload(agent, last_text)
+
+        if raw is None:
+            followup = await agent.chat(
+                "Do not output Markdown prose. Invoke the `finish` tool now to submit "
+                "the final GateVerdict structured payload."
+            )
+            raw = await followup.structured_output()
+            if raw is None:
+                last_text = await followup.text()
+                raw = _extract_verdict_payload(agent, last_text)
+
+        if raw is None:
+            raise RuntimeError(
+                f"Agent failed to produce GateVerdict.\nLast response text:\n{last_text}"
+            )
+        verdict = GateVerdict.model_validate(raw)
+
+    write_reports(verdict)
+    return 0 if verdict.approved else 1
+
+
+if __name__ == "__main__":
+    sys.exit(asyncio.run(run_gate()))</code></pre>
+      </details>
+
+      <aside class="special">
+        <p><strong>Production Best Practice &mdash; Keyless Authentication Options:</strong><br>
+        In this workshop, we use <code>GEMINI_API_KEY</code> so you can get started in 30 seconds without configuring cloud IAM. For <strong>enterprise production pipelines</strong>, avoid long-lived API keys! Instead, route the Antigravity SDK through <a href="https://antigravity.google/docs/sdk/overview#gemini-enterprise" target="_blank">Gemini Enterprise / Vertex AI</a> (<code>GOOGLE_GENAI_USE_VERTEXAI=true</code>, <code>GOOGLE_CLOUD_PROJECT</code>, <code>GOOGLE_CLOUD_LOCATION</code>) authenticated via GitLab OIDC <code>id_tokens</code> and <a href="https://cloud.google.com/iam/docs/workload-identity-federation-with-deployment-pipelines" target="_blank">Google Cloud Workload Identity Federation</a>&mdash;zero static keys stored anywhere.</p>
+      </aside>
+
+      <h2>2. Get a Gemini API Key &amp; Test the Gate Locally</h2>
+      <p>If you do not already have a <code>GEMINI_API_KEY</code>, create one in <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a> (<a href="https://ai.google.dev/gemini-api/docs/api-key" target="_blank">official docs</a>):</p>
+      <ol>
+        <li>Open <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio &mdash; API Keys</a> and sign in with your Google account.</li>
+        <li>Click <strong>Create API key</strong> (first-time users automatically receive a default project and key after accepting the Terms; existing Google Cloud users can select or import a project via <strong>Dashboard &gt; Projects</strong>).</li>
+        <li>Copy the generated key and keep it handy (you will also add it to GitLab in Step 3).</li>
+      </ol>
+
+      <aside class="warning">
+        <p><strong>Heads-Up &mdash; Google AI Studio Prepay Credits:</strong><br>
+        Google AI Studio assigns billing-linked projects to a <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank">Prepay billing plan</a> ($5 minimum credit balance) and enforces strict rate/model limits on the Free Tier. If running <code>ci/ai_gate.py</code> returns a <strong>No credits</strong> or <strong>Prepay</strong> error, check <a href="https://aistudio.google.com/billing" target="_blank">AI Studio Billing</a> to ensure a positive credit balance (or use the workshop API key / Vertex AI project provided by your instructor).</p>
+      </aside>
+
+      <p>Now export <code>GEMINI_API_KEY</code> in your terminal and run the gate against your clean starter project:</p>
+      <pre><code data-lang="sh">export GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
+uv run python ci/ai_gate.py</code></pre>
+      <p>The multi-agent audit typically takes <strong>~1&ndash;2 minutes</strong> while streaming live <code>Tool call -&gt; ...</code> progress. Because our starter code aligns with <code>docs/designs/retropulse.md</code> and runs as <code>USER nonroot</code> in <code>Dockerfile</code>, the gate prints <code># Antigravity + EGM CI Gate: PASSED</code> and exits with code <code>0</code>!</p>
+    </google-codelab-step>
+
+    <google-codelab-step label="Step 3: Author &amp; Deploy .gitlab-ci.yml from Antigravity" duration="10">
+      <p>Now that your EGM gate works locally, let&rsquo;s wire it into a multi-stage <strong>GitLab CI/CD</strong> pipeline.</p>
+
+      <h2>1. Store <code>GEMINI_API_KEY</code> in GitLab CI/CD Variables</h2>
+      <ol>
+        <li>Open your project in <strong>GitLab</strong>.</li>
+        <li>In the left sidebar, go to <strong>Settings &gt; CI/CD</strong>.</li>
+        <li>Expand the <strong>Variables</strong> section and click <strong>Add variable</strong>.</li>
+        <li>Configure the variable carefully:
+          <ul>
+            <li><strong>Type</strong>: Variable (default)</li>
+            <li><strong>Visibility</strong>: Select <strong>Masked</strong> (hides the key in job logs).</li>
+            <li><strong>Flags &mdash; Protect variable</strong>: <strong>UNCHECK &ldquo;Protect variable&rdquo;</strong>.</li>
+            <li><strong>Key</strong>: <code>GEMINI_API_KEY</code></li>
+            <li><strong>Value</strong>: Paste your Gemini API key.</li>
+          </ul>
+        </li>
+        <li>Click <strong>Add variable</strong>.</li>
+      </ol>
+
+      <aside class="warning">
+        <p><strong>Critical GitLab Gotcha &mdash; Why Uncheck &ldquo;Protect variable&rdquo;?</strong><br>
+        In GitLab, <em>Protected</em> variables are only exposed to protected branches like <code>main</code>. Because we want our AI gate to audit <strong>feature branches and Merge Requests</strong> <em>before</em> they merge into <code>main</code>, leaving &ldquo;Protect variable&rdquo; checked would leave <code>GEMINI_API_KEY</code> empty on Merge Request runs!</p>
+      </aside>
+
+      <h2>2. Generate <code>.gitlab-ci.yml</code> in Antigravity App</h2>
+      <p>Copy and paste <strong>Prompt 2</strong> into Antigravity App:</p>
+      <pre><code>Create a `.gitlab-ci.yml` pipeline at the repository root with two stages (`test` and `ai-gate`) using `ghcr.io/astral-sh/uv:python3.12-bookworm-slim` and caching `.uv-cache/`:
+
+1. `unit-tests` (`stage: test`): runs `uv sync --frozen` and `uv run --frozen pytest -v` on Merge Requests (`$CI_PIPELINE_SOURCE == "merge_request_event"`) and pushes to `$CI_DEFAULT_BRANCH`.
+2. `antigravity-ai-gate` (`stage: ai-gate`, `needs: ["unit-tests"]`): installs `git` and `ca-certificates` via `apt-get`, shallow-clones `https://github.com/google/elephant-goldfish-model.git` to `/tmp/egm`, runs `uv sync --frozen` and `EGM_REPO_PATH=/tmp/egm uv run --frozen python ci/ai_gate.py`, and always uploads `DRIFT_REPORT.md` and `verdict.json` as GitLab job artifacts (`when: always`, `expire_in: 7 days`) on Merge Requests and `$CI_DEFAULT_BRANCH`.</code></pre>
+
+      <details class="checkpoint">
+        <summary>Checkpoint: View verified <code>.gitlab-ci.yml</code></summary>
+        <pre><code data-lang="yaml">stages:
+  - test
+  - ai-gate
+
+variables:
+  UV_CACHE_DIR: "$CI_PROJECT_DIR/.uv-cache"
+
+default:
+  image: ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+  cache:
+    key:
+      files:
+        - uv.lock
+    paths:
+      - .uv-cache/
+
+unit-tests:
+  stage: test
+  script:
+    - uv sync --frozen
+    - uv run --frozen pytest -v
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+antigravity-ai-gate:
+  stage: ai-gate
+  needs: ["unit-tests"]
+  before_script:
+    - apt-get update &amp;&amp; apt-get install -y --no-install-recommends git ca-certificates &amp;&amp; rm -rf /var/lib/apt/lists/*
+    # Production tip: pin elephant-goldfish-model to an immutable commit SHA or release tag
+    - git clone --depth 1 https://github.com/google/elephant-goldfish-model.git /tmp/egm
+  script:
+    - uv sync --frozen
+    - EGM_REPO_PATH=/tmp/egm uv run --frozen python ci/ai_gate.py
+  artifacts:
+    when: always
+    paths:
+      - DRIFT_REPORT.md
+      - verdict.json
+    expire_in: 7 days
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH</code></pre>
+      </details>
+
+      <aside class="special">
+        <p><strong>Tip &mdash; 1-Line Headless CLI Alternative:</strong><br>
+        Need a quick nightly drift report without writing Python? You can also run EGM via <a href="https://antigravity.google/docs/cli/headless" target="_blank">Antigravity CLI Headless Mode</a> (<code>agy plugin install https://github.com/google/elephant-goldfish-model</code> followed by <code>agy -p "/egm:egm-drift-report docs/designs/"</code>). Using the <strong>Antigravity Python SDK</strong> in <code>ci/ai_gate.py</code> gives us deterministic Pydantic exit codes, custom security Goldfish, and zero separate CLI setup!</p>
+      </aside>
+
+      <h2>3. Push to <code>main</code> &amp; Watch Your Baseline Pipeline Pass</h2>
+      <p>Commit your new gate and pipeline configuration, then push to GitLab (note that <code>.gitignore</code> in the starter repo already excludes local <code>DRIFT_REPORT.md</code> and <code>verdict.json</code> files):</p>
+      <pre><code data-lang="sh">git add pyproject.toml uv.lock ci/ai_gate.py .gitlab-ci.yml
+git commit -m "ci: add pytest and antigravity sdk + egm quality gate pipeline"
+git push origin main</code></pre>
+      <p>In GitLab&rsquo;s left sidebar, click <strong>Build &gt; Pipelines</strong>. You will see both <code>unit-tests</code> and <code>antigravity-ai-gate</code> run in sequence and turn <strong>Passed</strong>!</p>
+    </google-codelab-step>
+
+    <google-codelab-step label="Step 4: Sneak Past Unit Tests &amp; Block a Merge Request" duration="12">
+      <p>Here is where an autonomous EGM + Antigravity SDK gate proves its value. Imagine a teammate under deadline pressure pushes a &ldquo;quick troubleshooting change&rdquo; on a feature branch that <strong>does not break any existing unit tests</strong>&mdash;but violates both your architecture spec and container security rules.</p>
+
+      <h2>1. Create a Feature Branch with Two Hidden Violations</h2>
+      <p>Create a new branch named <code>feat/quick-hack</code>:</p>
+      <pre><code data-lang="sh">git checkout -b feat/quick-hack</code></pre>
+      <p>Now copy and paste <strong>Prompt 3</strong> into Antigravity App to simulate the risky change:</p>
+      <pre><code>To test that our CI gate catches violations, make two intentional changes on this branch without changing `docs/designs/retropulse.md` or `test_main.py`:
+1. In `main.py`, add an undocumented `GET /api/debug/config` endpoint that returns `{"app": "RetroPulse", "debug_token": "dev-secret-12345"}`.
+2. In `Dockerfile`, change `USER nonroot` to `USER root`.</code></pre>
+
+      <h2>2. Notice That Traditional Unit Tests Still Pass!</h2>
+      <p>Run <code>pytest</code> locally:</p>
+      <pre><code data-lang="sh">uv run pytest -v</code></pre>
+      <p>All <strong>4 tests pass</strong>! Without an architectural and security gate, a rushed reviewer seeing a green test checkmark could easily merge both an undocumented secret-leaking endpoint and a root container into production.</p>
+
+      <h2>3. Open a GitLab Merge Request &amp; Watch the AI Gate Block It</h2>
+      <p>Commit and push the branch to GitLab:</p>
+      <pre><code data-lang="sh">git add main.py Dockerfile
+git commit -m "feat: add debug config endpoint and root user for troubleshooting"
+git push -u origin feat/quick-hack</code></pre>
+      <ol>
+        <li>In GitLab, click <strong>Create merge request</strong> from the banner at the top of your project (or go to <strong>Code &gt; Merge requests &gt; New merge request</strong>, choose source branch <code>feat/quick-hack</code> into <code>main</code>, and click <strong>Create merge request</strong>).</li>
+        <li>Open the <strong>Pipelines</strong> tab inside your Merge Request:
+          <ul>
+            <li>Stage 1 (<code>unit-tests</code>): <strong class="success">Passed &#10003;</strong></li>
+            <li>Stage 2 (<code>antigravity-ai-gate</code>): <strong class="error">Failed &#10007; (Blocked!)</strong></li>
+          </ul>
+        </li>
+        <li>Click the failed <code>antigravity-ai-gate</code> job to view the console output&mdash;or click <strong>Browse</strong> under <strong>Job artifacts</strong> in the right-hand panel to open <code>DRIFT_REPORT.md</code>!</li>
+      </ol>
+      <p>You will see structured findings from both Goldfish: <code>egm_codebase_details</code> flagging the undocumented <code>/api/debug/config</code> route under <code>## docs/designs/retropulse.md (EGM Drift Report)</code>, and <code>security_auditor</code> flagging both the hardcoded <code>debug_token</code> and <code>USER root</code> under <code>## Security Audit</code>!</p>
+    </google-codelab-step>
+
+    <google-codelab-step label="Step 5: Remediate with Antigravity &amp; Merge Green" duration="7">
+      <p>Now let&rsquo;s close the loop using Antigravity App to remediate the findings and ship a clean Merge Request.</p>
+
+      <h2>1. Fix the Violations &amp; Add a Legitimate Spec-Aligned Improvement</h2>
+      <p>Suppose what your team actually needed was a safe, spec-governed <code>GET /healthz</code> liveness probe for Cloud Run. Remember the Golden Rule of <a href="../" target="_blank">Spec-Driven Development</a>: <strong>update and review the specification first, and only then implement the code and unit tests.</strong></p>
+
+      <aside class="special">
+        <p><strong>Workshop Time-Saver Note:</strong> In day-to-day engineering, any new feature or spec change in <code>docs/designs/retropulse.md</code> should go through the full EGM review cycle (<a href="https://github.com/google/elephant-goldfish-model/blob/main/skills/egm-review/SKILL.md" target="_blank"><code>/egm:egm-review</code></a> and <code>/egm:egm-resolve</code>) <em>before</em> writing code&mdash;just as practiced in the <a href="../" target="_blank">Spec-Driven Development</a> workshop. To keep this final step within 7 minutes and focus on the GitLab Merge Request loop, Prompt 4 combines the spec update and implementation into a single step.</p>
+      </aside>
+
+      <p>Copy and paste <strong>Prompt 4</strong> into Antigravity App:</p>
+      <pre><code>Remediate the CI gate failures on this branch and add a proper health check cleanly:
+1. Remove the undocumented `/api/debug/config` endpoint and hardcoded token from `main.py`.
+2. Restore `USER nonroot` in `Dockerfile`.
+3. Update `docs/designs/retropulse.md` first to authorize `GET /healthz` returning `{"status": "ok"}` (HTTP 200), then implement `GET /healthz` in `main.py` and add `test_healthz` in `test_main.py`.
+4. Run `uv run pytest -v` to verify all 5 unit tests pass.</code></pre>
+
+      <h2>2. Push to the Merge Request &amp; Merge Green</h2>
+      <p>(Optional) Run <code>uv run python ci/ai_gate.py</code> locally for a fast pre-push check, then commit and push to update the open Merge Request:</p>
+      <pre><code data-lang="sh">git add docs/designs/retropulse.md main.py test_main.py Dockerfile
+git commit -m "fix: remove debug hack, restore nonroot user, and add spec-aligned /healthz"
+git push</code></pre>
+      <p>Return to your open <strong>Merge Request</strong> in GitLab:</p>
+      <ol>
+        <li>GitLab automatically triggers a new Merge Request pipeline.</li>
+        <li><code>unit-tests</code> passes (<strong>5 passed</strong>) <strong class="success">&#10003;</strong>.</li>
+        <li><code>antigravity-ai-gate</code> audits your updated spec, code, and <code>Dockerfile</code>, reports <code>No drift detected</code> and <code>Approved: True</code> in <code>DRIFT_REPORT.md</code>, and turns <strong class="success">Passed &#10003;</strong>!</li>
+        <li>Click <strong>Merge</strong> to ship your change cleanly into <code>main</code>.</li>
+      </ol>
+    </google-codelab-step>
+
+    <google-codelab-step label="Step 6: (Optional Bonus) Keyless CD to Google Cloud Run" duration="3">
+      <aside class="warning">
+        <p><strong>Optional Bonus Step:</strong> Running live deployments to Cloud Run requires a <strong>Google Cloud Project</strong> with billing enabled. Even without a GCP project, you can generate and review the production deployment stage locally!</p>
+      </aside>
+
+      <p>Once both <code>unit-tests</code> and <code>antigravity-ai-gate</code> pass on <code>main</code>, we can add a 3rd <code>deploy</code> stage to ship RetroPulse automatically to <a href="https://cloud.google.com/run/docs/quickstarts/build-and-deploy/deploy-python-fastapi-service" target="_blank">Google Cloud Run</a> following <a href="https://cloud.google.com/run/docs/tips/general" target="_blank">Cloud Run security best practices</a>:</p>
+      <ul>
+        <li><strong>Zero Service Account JSON Keys</strong>: Use GitLab&rsquo;s native OIDC <code>id_tokens</code> with <a href="https://cloud.google.com/iam/docs/workload-identity-federation-with-deployment-pipelines" target="_blank">Google Cloud Workload Identity Federation</a> so temporary credentials expire automatically after each job.</li>
+        <li><strong>Dedicated Runtime Service Account</strong>: Deploy the Cloud Run service with its own minimal service account rather than the default Compute Engine service account.</li>
+      </ul>
+
+      <h2>Generate Stage 3 (<code>deploy</code>) with Antigravity App</h2>
+      <p>Copy and paste <strong>Prompt 5</strong> into Antigravity App:</p>
+      <pre><code>Extend `.gitlab-ci.yml` with a third stage named `deploy` (`deploy-cloud-run`) that runs ONLY on `$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH` after `antigravity-ai-gate` succeeds:
+1. Use GitLab `id_tokens` (`GCP_ID_TOKEN`) to authenticate keylessly to Google Cloud via Workload Identity Federation (`$GCP_WORKLOAD_IDENTITY_PROVIDER` and `$GCP_DEPLOYER_SA`).
+2. Build and push the multi-stage container image to Artifact Registry, then deploy to Cloud Run in `$GCP_REGION` using a dedicated least-privilege runtime service account (`$GCP_RUNTIME_SA`).
+3. Also summarize the one-time `gcloud iam workload-identity-pools` commands needed to trust our GitLab project path.</code></pre>
+
+      <h2>Congratulations!</h2>
+      <p>You have designed, tested, and shipped an <strong>AI-Gated GitLab CI/CD Pipeline</strong> from <strong>Google Antigravity</strong> using the <strong>Google Antigravity Python SDK</strong>&mdash;combining fast deterministic tests with read-only, policy-governed subagent auditors and structured Pydantic release gates!</p>
+    </google-codelab-step>
+
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+  <script>
+    (function () {
+      if (localStorage.getItem('codelab-code-theme') === 'light') {
+        document.body.classList.add('code-light');
+      }
+
+      if (window.PR && typeof window.PR.registerLangHandler === 'function') {
+        window.PR.registerLangHandler(
+          window.PR.createSimpleLexer(
+            [
+              [window.PR.PR_PLAIN, /^[ \t\r\n]+/, null, ' \t\r\n'],
+              [window.PR.PR_COMMENT, /^#[^\r\n]*/, null, '#'],
+              [window.PR.PR_STRING, /^"(?:[^"\\]|\\.)*(?:"|$)/, null, '"'],
+              [window.PR.PR_STRING, /^'(?:[^'\\]|\\.)*(?:'|$)/, null, "'"]
+            ],
+            [
+              [window.PR.PR_ATTRIB_NAME, /^[A-Za-z0-9_.-]+(?=\s*:(?:\s|$))/],
+              [window.PR.PR_TYPE, /^\$[A-Za-z_][A-Za-z0-9_]*/],
+              [window.PR.PR_LITERAL, /^(?:true|false|null|always|never|on_success|on_failure)\b/],
+              [window.PR.PR_LITERAL, /^\d+\b/],
+              [window.PR.PR_PUNCTUATION, /^[:[\],-]/],
+              [window.PR.PR_PLAIN, /^[^\s#"':[\],$-]+/]
+            ]
+          ),
+          ['yaml', 'yml']
+        );
+      }
+
+      function enhanceCodeBlocks() {
+        document.querySelectorAll('google-codelab-step pre').forEach(function (pre) {
+          if (pre.parentElement && pre.parentElement.classList.contains('code-block-wrapper')) {
+            return;
+          }
+          var codeEl = pre.querySelector('code');
+          var rawText = (codeEl || pre).textContent;
+          if (codeEl && codeEl.hasAttribute('data-lang') && typeof window.prettyPrintOne === 'function') {
+            codeEl.innerHTML = window.prettyPrintOne(codeEl.innerHTML, codeEl.getAttribute('data-lang'));
+          }
+          var wrapper = document.createElement('div');
+          wrapper.className = 'code-block-wrapper';
+          pre.parentNode.insertBefore(wrapper, pre);
+
+          var actions = document.createElement('div');
+          actions.className = 'code-block-actions';
+
+          var themeBtn = document.createElement('button');
+          themeBtn.type = 'button';
+          themeBtn.className = 'code-action-btn';
+          themeBtn.title = 'Dark/Light code theme';
+          themeBtn.setAttribute('aria-label', 'Toggle dark or light code theme');
+          themeBtn.innerHTML = '<i class="material-icons">brightness_medium</i>';
+          themeBtn.addEventListener('click', function () {
+            var isLight = document.body.classList.toggle('code-light');
+            localStorage.setItem('codelab-code-theme', isLight ? 'light' : 'dark');
+          });
+
+          var copyBtn = document.createElement('button');
+          copyBtn.type = 'button';
+          copyBtn.className = 'code-action-btn';
+          copyBtn.title = 'Copy code sample';
+          copyBtn.setAttribute('aria-label', 'Copy code sample');
+          copyBtn.innerHTML = '<i class="material-icons">content_copy</i>';
+          copyBtn.addEventListener('click', function () {
+            navigator.clipboard.writeText(rawText).then(function () {
+              copyBtn.classList.add('copied');
+              copyBtn.title = 'Copied!';
+              copyBtn.innerHTML = '<i class="material-icons">check</i>';
+              setTimeout(function () {
+                copyBtn.classList.remove('copied');
+                copyBtn.title = 'Copy code sample';
+                copyBtn.innerHTML = '<i class="material-icons">content_copy</i>';
+              }, 1500);
+            });
+          });
+
+          actions.appendChild(themeBtn);
+          actions.appendChild(copyBtn);
+          wrapper.appendChild(actions);
+          wrapper.appendChild(pre);
+        });
+      }
+
+      var codelab = document.querySelector('google-codelab');
+      if (codelab && codelab.hasAttribute('google-codelab-ready')) {
+        enhanceCodeBlocks();
+      } else {
+        window.addEventListener('google-codelab-ready', enhanceCodeBlocks);
+        window.addEventListener('load', enhanceCodeBlocks);
+      }
+    })();
+  </script>
+</body>
+</html>

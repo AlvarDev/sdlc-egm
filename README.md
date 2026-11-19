@@ -6,9 +6,10 @@ Hands-on workshop and presentation materials for **Spec-Driven Development (SDD)
 
 ## 🚀 Live Interactive Codelab & Demo App
 
-Follow the interactive, step-by-step Google Codelab in your browser:
+Follow the interactive, step-by-step Google Codelabs in your browser:
 
-* **GitHub Pages Codelab**: [https://alvardev.github.io/sdlc-egm/](https://alvardev.github.io/sdlc-egm/)
+* **Workshop 1 — Spec-Driven Development & EGM**: [https://alvardev.github.io/sdlc-egm/](https://alvardev.github.io/sdlc-egm/)
+* **Workshop 2 — GitLab CI/CD with Antigravity SDK & EGM**: [https://alvardev.github.io/sdlc-egm/gitlab-ci/](https://alvardev.github.io/sdlc-egm/gitlab-ci/)
 
 Try the live **RetroPulse** application on Cloud Run (`southamerica-east1`):
 
@@ -22,31 +23,29 @@ Try the live **RetroPulse** application on Cloud Run (`southamerica-east1`):
 ```text
 sdlc-egm/
 ├── README.md                  # Repository overview & live Codelab links
-├── docs/                      # Compiled interactive HTML Codelab (GitHub Pages)
-│   └── index.html
-├── codelab/                   # Codelab Markdown source & local preview Go server
-│   ├── codelab.md             # Google Codelabs (claat) Markdown source
+├── docs/                      # Compiled interactive HTML Codelabs (GitHub Pages)
+│   ├── index.html             # Workshop 1: SDD & EGM Codelab
+│   └── gitlab-ci/
+│       └── index.html         # Workshop 2: GitLab CI/CD & Antigravity SDK Codelab
+├── codelab/                   # Codelab Markdown sources & local preview Go server
+│   ├── codelab.md             # Workshop 1 (claat) Markdown source
+│   ├── gitlab-ci.md           # Workshop 2 (claat) Markdown source
 │   ├── Dockerfile             # Multi-stage Google Distroless Dockerfile
 │   ├── go.mod                 # Go module definition
 │   └── server.go              # Go standard-library static HTTP server
 ├── guides/                    # Markdown guides for attendees and speaker
-│   ├── WORKSHOP_GUIDE.md      # Step-by-step GitHub Markdown backup for attendees
-│   └── SPEAKER_GUIDE.md       # 30-min presentation outline & 60-min facilitator runbook
-└── reference-app/             # Golden reference checkpoint of the "RetroPulse" app
-    ├── docs/
-    │   └── designs/
-    │       └── retropulse.md  # Approved EGM design specification
-    ├── main.py                # FastAPI backend (Python + uv)
-    ├── static/
-    │   └── index.html         # 3-column vanilla HTML/CSS/JS frontend
-    └── Dockerfile             # Multi-stage Python + uv Distroless Dockerfile
+│   ├── WORKSHOP_GUIDE.md             # Workshop 1 attendee backup
+│   ├── SPEAKER_GUIDE.md              # Workshop 1 facilitator runbook
+│   ├── GITLAB_CI_WORKSHOP_GUIDE.md   # Workshop 2 attendee backup
+│   └── GITLAB_CI_SPEAKER_GUIDE.md    # Workshop 2 facilitator runbook & GitLab cheat sheet
+├── reference-app/             # Workshop 1 golden reference ("RetroPulse")
+├── retropulse-starter/        # Workshop 2 clean starter repo for GitLab import
+└── reference-gitlab-ci/       # Workshop 2 golden reference (.gitlab-ci.yml + ci/ai_gate.py)
 ```
 
 ---
 
 ## 📖 Quick Links
 
-* **[Attendee Step-by-Step Guide (Markdown Backup)](./guides/WORKSHOP_GUIDE.md)**
-* **[Speaker & Facilitator Guide (30m Talk + 60m Workshop)](./guides/SPEAKER_GUIDE.md)**
-* **[Codelab Source (`claat` Markdown)](./codelab/codelab.md)**
-* **[Golden Reference App (`RetroPulse`)](./reference-app/)**
+* **Workshop 1 (SDD & EGM)**: [Attendee Guide](./guides/WORKSHOP_GUIDE.md) · [Speaker Guide](./guides/SPEAKER_GUIDE.md) · [Codelab Source](./codelab/codelab.md) · [Reference App](./reference-app/)
+* **Workshop 2 (GitLab CI/CD & Antigravity SDK)**: [Attendee Guide](./guides/GITLAB_CI_WORKSHOP_GUIDE.md) · [Speaker Guide & GitLab Cheat Sheet](./guides/GITLAB_CI_SPEAKER_GUIDE.md) · [Codelab Source](./codelab/gitlab-ci.md) · [Starter Repo](./retropulse-starter/) · [Reference Pipeline](./reference-gitlab-ci/)

@@ -1,0 +1,44 @@
+stages:
+  - test
+  - ai-gate
+
+variables:
+  UV_CACHE_DIR: "$CI_PROJECT_DIR/.uv-cache"
+
+default:
+  image: ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+  cache:
+    key:
+      files:
+        - uv.lock
+    paths:
+      - .uv-cache/
+
+unit-tests:
+  stage: test
+  script:
+    - uv sync --frozen
+    - uv run --frozen pytest -v
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+antigravity-ai-gate:
+  stage: ai-gate
+  needs: ["unit-tests"]
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
+    # Production tip: pin elephant-goldfish-model to an immutable commit SHA or release tag
+    - git clone --depth 1 https://github.com/google/elephant-goldfish-model.git /tmp/egm
+  script:
+    - uv sync --frozen
+    - EGM_REPO_PATH=/tmp/egm uv run --frozen python ci/ai_gate.py
+  artifacts:
+    when: always
+    paths:
+      - DRIFT_REPORT.md
+      - verdict.json
+    expire_in: 7 days
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

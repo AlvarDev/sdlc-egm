@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 300" width="960" height="300" role="img" aria-label="Antigravity GitLab CI/CD Pipeline Architecture">
+  <defs>
+    <style>
+      .bg { fill: #f8f9fa; rx: 12; }
+      .card { fill: #ffffff; stroke: #dadce0; stroke-width: 1.5; rx: 10; }
+      .title { font: 700 14px 'Roboto', sans-serif; fill: #202124; }
+      .sub { font: 400 12px 'Roboto', sans-serif; fill: #5f6368; }
+      .pill-text { font: 700 10px 'Roboto Mono', monospace; }
+      .arrow { stroke: #5f6368; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#5f6368"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="960" height="300" class="bg"/>
+
+  <!-- Box 1: Antigravity App -->
+  <rect x="24" y="68" width="185" height="164" class="card"/>
+  <rect x="24" y="68" width="185" height="5" fill="#4285f4" rx="2"/>
+  <rect x="38" y="86" width="110" height="20" rx="4" fill="#e8f0fe"/>
+  <text x="46" y="100" class="pill-text" fill="#1967d2">WORKSTATION</text>
+  <text x="38" y="128" class="title">Antigravity App</text>
+  <text x="38" y="150" class="sub">• Authors ci/ai_gate.py</text>
+  <text x="38" y="170" class="sub">• Generates .gitlab-ci.yml</text>
+  <text x="38" y="190" class="sub">• Opens GitLab MR</text>
+
+  <line x1="209" y1="150" x2="243" y2="150" class="arrow"/>
+
+  <!-- Box 2: Stage 1 pytest -->
+  <rect x="248" y="68" width="185" height="164" class="card"/>
+  <rect x="248" y="68" width="185" height="5" fill="#34a853" rx="2"/>
+  <rect x="262" y="86" width="118" height="20" rx="4" fill="#e6f4ea"/>
+  <text x="270" y="100" class="pill-text" fill="#137333">STAGE 1 · TEST</text>
+  <text x="262" y="128" class="title">Deterministic CI</text>
+  <text x="262" y="150" class="sub">• Fast unit tests first</text>
+  <text x="262" y="170" class="sub">• uv run pytest -v</text>
+  <text x="262" y="190" class="sub">• Saves AI tokens on</text>
+  <text x="262" y="206" class="sub">  broken builds</text>
+
+  <line x1="433" y1="150" x2="467" y2="150" class="arrow"/>
+
+  <!-- Box 3: Stage 2 Antigravity SDK + EGM -->
+  <rect x="472" y="42" width="245" height="216" class="card"/>
+  <rect x="472" y="42" width="245" height="5" fill="#fbbc04" rx="2"/>
+  <rect x="486" y="60" width="198" height="20" rx="4" fill="#fef7e0"/>
+  <text x="494" y="74" class="pill-text" fill="#b06000">STAGE 2 · SDK + EGM GATE</text>
+  <text x="486" y="102" class="title">Elephant CI Coordinator</text>
+  <text x="486" y="122" class="sub">Skill: egm-drift-report + 2 Goldfish:</text>
+  <rect x="486" y="134" width="217" height="36" rx="6" fill="#f1f3f4"/>
+  <text x="496" y="150" class="title" style="font-size:12px;">1. egm_codebase_details</text>
+  <text x="496" y="164" class="sub" style="font-size:11px;">EGM Drift Audit (retropulse.md)</text>
+  <rect x="486" y="176" width="217" height="36" rx="6" fill="#f1f3f4"/>
+  <text x="496" y="192" class="title" style="font-size:12px;">2. security_auditor</text>
+  <text x="496" y="206" class="sub" style="font-size:11px;">Dockerfile nonroot &amp; secrets</text>
+  <text x="486" y="236" class="sub" style="fill:#1967d2;font-weight:500;">→ GateVerdict + DRIFT_REPORT.md</text>
+
+  <line x1="717" y1="150" x2="751" y2="150" class="arrow"/>
+
+  <!-- Box 4: Stage 3 Deploy -->
+  <rect x="756" y="68" width="180" height="164" class="card"/>
+  <rect x="756" y="68" width="180" height="5" fill="#ea4335" rx="2"/>
+  <rect x="770" y="86" width="142" height="20" rx="4" fill="#fce8e6"/>
+  <text x="778" y="100" class="pill-text" fill="#c5221f">STAGE 3 · OUTCOME</text>
+  <text x="770" y="128" class="title">Gate Decision</text>
+  <text x="770" y="152" class="sub" style="fill:#c5221f;font-weight:500;">✗ Drift / Root User:</text>
+  <text x="770" y="168" class="sub">  Blocks Merge Request</text>
+  <text x="770" y="194" class="sub" style="fill:#137333;font-weight:500;">✓ Approved on main:</text>
+  <text x="770" y="210" class="sub">  Keyless WIF → Cloud Run</text>
+
+  <!-- Google 4-color bottom accent -->
+  <rect x="0" y="295" width="240" height="5" fill="#4285f4"/>
+  <rect x="240" y="295" width="240" height="5" fill="#ea4335"/>
+  <rect x="480" y="295" width="240" height="5" fill="#fbbc04"/>
+  <rect x="720" y="295" width="240" height="5" fill="#34a853"/>
+</svg>
